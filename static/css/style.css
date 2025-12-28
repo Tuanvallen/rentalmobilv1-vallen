@@ -1,0 +1,266 @@
+/* Global Styles */
+:root {
+    --primary-color: #8156FF;
+    --secondary-color: #f59e0b;
+    --dark-color: #343a40;
+    --light-color: #f8f9fa;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #7048e8;
+    border-color: #7048e8;
+}
+
+.btn-warning {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: #000;
+}
+
+.btn-warning:hover {
+    background-color: #e69500;
+    border-color: #e69500;
+    color: #000;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+    transition: transform 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Badges */
+.badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.badge-primary {
+    background-color: var(--primary-color);
+}
+
+.badge-warning {
+    background-color: var(--secondary-color);
+    color: #000;
+}
+
+/* Forms */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(129, 86, 255, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+}
+
+/* Tables */
+.table th {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: 8px;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(rgba(129, 86, 255, 0.8), rgba(129, 86, 255, 0.9)), 
+                url('/static/images/hero-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 100px 0;
+    text-align: center;
+}
+
+.hero-section h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+/* Features */
+.feature-box {
+    text-align: center;
+    padding: 30px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    transition: all 0.3s ease;
+}
+
+.feature-box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,.2);
+}
+
+.feature-box i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+/* Car Card */
+.car-card .card-body {
+    padding: 20px;
+}
+
+.car-price {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.car-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.car-features li {
+    display: inline-block;
+    margin-right: 10px;
+    color: #666;
+}
+
+.car-features li i {
+    color: var(--secondary-color);
+    margin-right: 5px;
+}
+
+/* Chat */
+.chat-container {
+    height: 500px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.chat-message {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 20px;
+    max-width: 70%;
+}
+
+.chat-message.sent {
+    background-color: var(--primary-color);
+    color: white;
+    margin-left: auto;
+}
+
+.chat-message.received {
+    background-color: #e9ecef;
+    color: #333;
+}
+
+/* Dashboard Stats */
+.stat-card {
+    border-radius: 10px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.stat-card.primary {
+    background: linear-gradient(45deg, var(--primary-color), #9d7bff);
+}
+
+.stat-card.success {
+    background: linear-gradient(45deg, var(--success-color), #5cd85c);
+}
+
+.stat-card.warning {
+    background: linear-gradient(45deg, var(--secondary-color), #ffc94d);
+}
+
+.stat-card.info {
+    background: linear-gradient(45deg, var(--info-color), #5bc0de);
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.stat-card .stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* Pagination */
+.pagination .page-link {
+    color: var(--primary-color);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Loading Spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .feature-box {
+        margin-bottom: 20px;
+    }
+    
+    .car-card .card-img-top {
+        height: 150px;
+    }
+}
