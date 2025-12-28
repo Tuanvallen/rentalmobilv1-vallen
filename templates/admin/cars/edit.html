@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Mobil - Admin Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_cars') }}">Kelola Mobil</a></li>
+            <li class="breadcrumb-item active">Edit Mobil</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Mobil</h5>
+                        <span class="badge bg-light text-dark">{{ car.plat_nomor }}</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('admin_car_edit', car_id=car.id) }}" 
+                          enctype="multipart/form-data" id="editCarForm">
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <!-- Car Image -->
+                                <div class="mb-4">
+                                    <label for="gambar" class="form-label">Gambar Mobil</label>
+                                    <div class="text-center mb-3">
+                                        {% if car.gambar %}
+                                        <img id="imagePreview" 
+                                             src="{{ url_for('serve_upload', filename='cars/' + car.gambar) }}" 
+                                             class="img-fluid rounded" alt="Preview" 
+                                             style="max-height: 200px; object-fit: cover;">
+                                        {% else %}
+                                        <img id="imagePreview" src="https://via.placeholder.com/300x200?text=No+Image" 
+                                             class="img-fluid rounded" alt="Preview">
+                                        {% endif %}
+                                    </div>
+                                    <input type="file" class="form-control" id="gambar" name="gambar" 
+                                           accept="image/*" onchange="previewImage(this)">
+                                    <div class="form-text">
+                                        Biarkan kosong jika tidak ingin mengubah gambar. 
+                                        Ukuran maksimal 2MB.
+                                    </div>
+                                </div>
+
+                                <!-- Basic Info -->
+                                <div class="mb-3">
+                                    <label for="merk" class="form-label">Merk</label>
+                                    <input type="text" class="form-control" id="merk" name="merk" 
+                                           value="{{ car.merk }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="model" class="form-label">Model</label>
+                                    <input type="text" class="form-control" id="model" name="model" 
+                                           value="{{ car.model }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="tahun" class="form-label">Tahun</label>
+                                    <input type="number" class="form-control" id="tahun" name="tahun" 
+                                           min="2000" max="{{ now_year }}" value="{{ car.tahun }}" required>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <!-- Technical Specs -->
+                                <div class="mb-3">
+                                    <label for="plat_nomor" class="form-label">Plat Nomor</label>
+                                    <input type="text" class="form-control" id="plat_nomor" name="plat_nomor" 
+                                           value="{{ car.plat_nomor }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="tipe" class="form-label">Tipe Mobil</label>
+                                    <select class="form-select" id="tipe" name="tipe" required>
+                                        <option value="sedan" {% if car.tipe == 'sedan' %}selected{% endif %}>Sedan</option>
+                                        <option value="suv" {% if car.tipe == 'suv' %}selected{% endif %}>SUV</option>
+                                        <option value="mpv" {% if car.tipe == 'mpv' %}selected{% endif %}>MPV</option>
+                                        <option value="hatchback" {% if car.tipe == 'hatchback' %}selected{% endif %}>Hatchback</option>
+                                        <option value="sport" {% if car.tipe == 'sport' %}selected{% endif %}>Sport</option>
+                                        <option value="truck" {% if car.tipe == 'truck' %}selected{% endif %}>Truck</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="transmisi" class="form-label">Transmisi</label>
+                                    <select class="form-select" id="transmisi" name="transmisi" required>
+                                        <option value="automatic" {% if car.transmisi == 'automatic' %}selected{% endif %}>Automatic</option>
+                                        <option value="manual" {% if car.transmisi == 'manual' %}selected{% endif %}>Manual</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="kapasitas" class="form-label">Kapasitas Penumpang</label>
+                                    <input type="number" class="form-control" id="kapasitas" name="kapasitas" 
+                                           min="2" max="12" value="{{ car.kapasitas }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="harga_per_hari" class="form-label">Harga per Hari (Rp)</label>
+                                    <input type="number" class="form-control" id="harga_per_hari" name="harga_per_hari" 
+                                           value="{{ car.harga_per_hari }}" min="100000" step="50000" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="tersedia" {% if car.status == 'tersedia' %}selected{% endif %}>Tersedia</option>
+                                        <option value="disewa" {% if car.status == 'disewa' %}selected{% endif %}>Disewa</option>
+                                        <option value="maintenance" {% if car.status == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label for="deskripsi" class="form-label">Deskripsi</label>
+                            <textarea class="form-control" id="deskripsi" name="deskripsi" rows="4">{{ car.deskripsi or '' }}</textarea>
+                        </div>
+
+                        <!-- Car Info Summary -->
+                        <div class="alert alert-info">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Dibuat:</strong> {{ car.created_at.strftime('%d %B %Y %H:%M') }}</p>
+                                    <p class="mb-0"><strong>Terakhir Diupdate:</strong> {{ car.updated_at.strftime('%d %B %Y %H:%M') }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>ID Mobil:</strong> {{ car.id }}</p>
+                                    <p class="mb-0"><strong>Pemilik:</strong> Sistem Rental</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{{ url_for('admin_cars') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i> Kembali
+                                </a>
+                                <button type="button" class="btn btn-danger ms-2" onclick="confirmDelete({{ car.id }})">
+                                    <i class="fas fa-trash me-2"></i> Hapus
+                                </button>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i> Simpan Perubahan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menghapus mobil ini?</p>
+                <p class="text-danger"><strong>Peringatan:</strong> Action ini tidak dapat dibatalkan!</p>
+                <p><strong>Mobil:</strong> {{ car.merk }} {{ car.model }} ({{ car.plat_nomor }})</p>
+                <p class="text-muted"><small>Mobil yang sedang disewa tidak dapat dihapus.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <form method="POST" action="{{ url_for('admin_delete_car', car_id=car.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Image preview
+function previewImage(input) {
+    const preview = document.getElementById('imagePreview');
+    const file = input.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+        }
+        
+        reader.readAsDataURL(file);
+    }
+}
+
+// Set current year for max year
+const now = new Date();
+const nowYear = now.getFullYear();
+document.getElementById('tahun').max = nowYear;
+
+// Form validation
+document.getElementById('editCarForm').addEventListener('submit', function(e) {
+    const platNomor = document.getElementById('plat_nomor').value;
+    const harga = document.getElementById('harga_per_hari').value;
+    const kapasitas = document.getElementById('kapasitas').value;
+    
+    // Plat nomor validation
+    if (!/^[A-Za-z]+\s+\d+\s+[A-Za-z]+$/.test(platNomor)) {
+        e.preventDefault();
+        alert('Format plat nomor tidak valid. Contoh: B 1234 ABC');
+        return false;
+    }
+    
+    // Price validation
+    if (parseInt(harga) < 100000) {
+        e.preventDefault();
+        alert('Harga per hari minimal Rp 100.000');
+        return false;
+    }
+    
+    // Capacity validation
+    if (parseInt(kapasitas) < 2 || parseInt(kapasitas) > 12) {
+        e.preventDefault();
+        alert('Kapasitas harus antara 2-12 orang');
+        return false;
+    }
+    
+    return true;
+});
+
+// Delete confirmation
+function confirmDelete(carId) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Format price input
+document.getElementById('harga_per_hari').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
+});
+</script>
+{% endblock %}

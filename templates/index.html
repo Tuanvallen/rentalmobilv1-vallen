@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Beranda - Rental Mobil{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">Sewa Mobil Terbaik dengan Harga Terjangkau</h1>
+        <p class="lead mb-4">Nikmati kenyamanan berkendara dengan armada terbaru dan pelayanan terbaik kami.</p>
+        <a href="{{ url_for('catalog') }}" class="btn btn-warning btn-lg">Lihat Katalog Mobil</a>
+        {% if not session.user_id %}
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg ms-2">Daftar Sekarang</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-3">Mengapa Memilih Kami?</h2>
+            <p class="text-muted">Kami memberikan pelayanan terbaik untuk kebutuhan transportasi Anda</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="feature-box">
+                    <i class="fas fa-car fa-3x mb-3"></i>
+                    <h4>Armada Terbaru</h4>
+                    <p>Mobil-mobil terbaru dengan kondisi prima dan terawat</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-box">
+                    <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                    <h4>Terpercaya</h4>
+                    <p>Lebih dari 1000+ pelanggan telah mempercayai kami</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-box">
+                    <i class="fas fa-headset fa-3x mb-3"></i>
+                    <h4>Support 24/7</h4>
+                    <p>Tim customer service siap membantu kapan saja</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-box">
+                    <i class="fas fa-tag fa-3x mb-3"></i>
+                    <h4>Harga Terbaik</h4>
+                    <p>Harga kompetitif dengan kualitas pelayanan terbaik</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Cars Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Mobil Populer</h2>
+            <a href="{{ url_for('catalog') }}" class="btn btn-primary">Lihat Semua Mobil</a>
+        </div>
+        
+        <div class="row">
+            {% if featured_cars %}
+                {% for car in featured_cars %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        {% if car.gambar %}
+                        <img src="{{ url_for('serve_upload', filename='cars/' + car.gambar) }}" class="card-img-top" alt="{{ car.merk }} {{ car.model }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top" alt="No Image">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ car.merk }} {{ car.model }}</h5>
+                            <p class="card-text">
+                                <i class="fas fa-calendar text-primary"></i> {{ car.tahun }} | 
+                                <i class="fas fa-users text-primary"></i> {{ car.kapasitas }} Orang |
+                                <i class="fas fa-cog text-primary"></i> {{ car.transmisi }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 text-primary fw-bold">Rp {{ "{:,.0f}".format(car.harga_per_hari) }}/hari</span>
+                                <span class="badge bg-{{ 'success' if car.status == 'tersedia' else 'danger' }}">
+                                    {{ car.status|title }}
+                                </span>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ url_for('car_detail', car_id=car.id) }}" class="btn btn-primary btn-sm">Detail</a>
+                                {% if car.status == 'tersedia' and session.user_id %}
+                                <a href="{{ url_for('booking', car_id=car.id) }}" class="btn btn-warning btn-sm">Sewa Sekarang</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Tidak ada mobil tersedia saat ini.
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-3">Cara Menyewa Mobil</h2>
+            <p class="text-muted">Hanya dalam 4 langkah mudah</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; margin-bottom: 20px;">
+                        <i class="fas fa-search fa-2x"></i>
+                    </div>
+                    <h4>1. Pilih Mobil</h4>
+                    <p>Pilih mobil sesuai kebutuhan dari katalog kami</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; margin-bottom: 20px;">
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                    <h4>2. Pilih Tanggal</h4>
+                    <p>Tentukan tanggal mulai dan selesai penyewaan</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; margin-bottom: 20px;">
+                        <i class="fas fa-credit-card fa-2x"></i>
+                    </div>
+                    <h4>3. Pembayaran</h4>
+                    <p>Bayar dengan mudah melalui berbagai metode pembayaran</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; margin-bottom: 20px;">
+                        <i class="fas fa-car fa-2x"></i>
+                    </div>
+                    <h4>4. Ambil Mobil</h4>
+                    <p>Ambil mobil di lokasi yang telah ditentukan</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <h2 class="display-4 fw-bold">{{ stats.total_cars if stats else 0 }}+</h2>
+                <p>Armada Mobil</p>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h2 class="display-4 fw-bold">1000+</h2>
+                <p>Pelanggan Puas</p>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h2 class="display-4 fw-bold">24/7</h2>
+                <p>Pelayanan</p>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h2 class="display-4 fw-bold">98%</h2>
+                <p>Kepuasan Pelanggan</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-4">Siap untuk Menyewa Mobil?</h2>
+        <p class="lead mb-4">Dapatkan pengalaman berkendara terbaik dengan rental mobil kami.</p>
+        {% if session.user_id %}
+        <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg">Sewa Mobil Sekarang</a>
+        {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Daftar Sekarang</a>
+        <a href="{{ url_for('catalog') }}" class="btn btn-outline-primary btn-lg ms-2">Lihat Katalog</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    background: linear-gradient(rgba(129, 86, 255, 0.9), rgba(129, 86, 255, 0.95)), 
+                url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 100px 0;
+    text-align: center;
+}
+
+.feature-box {
+    text-align: center;
+    padding: 30px 20px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    height: 100%;
+    transition: transform 0.3s ease;
+}
+
+.feature-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.feature-box i {
+    color: #8156FF;
+}
+
+.card {
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}

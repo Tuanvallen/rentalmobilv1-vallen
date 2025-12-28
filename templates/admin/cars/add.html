@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Tambah Mobil - Admin Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_cars') }}">Kelola Mobil</a></li>
+            <li class="breadcrumb-item active">Tambah Mobil</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Tambah Mobil Baru</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- PERBAIKAN DI SINI: ganti admin_add_car menjadi admin_car_add -->
+                    <form method="POST" action="{{ url_for('admin_car_add') }}" enctype="multipart/form-data" id="addCarForm">
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <!-- Car Image -->
+                                <div class="mb-4">
+                                    <label for="gambar" class="form-label">Gambar Mobil</label>
+                                    <div class="text-center mb-3">
+                                        <img id="imagePreview" src="https://via.placeholder.com/300x200?text=Preview+Gambar" 
+                                             class="img-fluid rounded" alt="Preview" 
+                                             style="max-height: 200px; object-fit: cover;">
+                                    </div>
+                                    <input type="file" class="form-control" id="gambar" name="gambar" 
+                                           accept="image/*" onchange="previewImage(this)">
+                                    <div class="form-text">Ukuran maksimal 2MB. Format: JPG, PNG, GIF</div>
+                                </div>
+
+                                <!-- Basic Info -->
+                                <div class="mb-3">
+                                    <label for="merk" class="form-label">Merk</label>
+                                    <input type="text" class="form-control" id="merk" name="merk" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="model" class="form-label">Model</label>
+                                    <input type="text" class="form-control" id="model" name="model" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="tahun" class="form-label">Tahun</label>
+                                    <input type="number" class="form-control" id="tahun" name="tahun" 
+                                           min="2000" max="{{ now_year }}" value="{{ now_year }}" required>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <!-- Technical Specs -->
+                                <div class="mb-3">
+                                    <label for="plat_nomor" class="form-label">Plat Nomor</label>
+                                    <input type="text" class="form-control" id="plat_nomor" name="plat_nomor" 
+                                           placeholder="B 1234 ABC" required>
+                                    <div class="form-text">Format: B 1234 ABC</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="tipe" class="form-label">Tipe Mobil</label>
+                                    <select class="form-select" id="tipe" name="tipe" required>
+                                        <option value="">Pilih Tipe</option>
+                                        <option value="sedan">Sedan</option>
+                                        <option value="suv">SUV</option>
+                                        <option value="mpv">MPV</option>
+                                        <option value="hatchback">Hatchback</option>
+                                        <option value="sport">Sport</option>
+                                        <option value="truck">Truck</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="transmisi" class="form-label">Transmisi</label>
+                                    <select class="form-select" id="transmisi" name="transmisi" required>
+                                        <option value="">Pilih Transmisi</option>
+                                        <option value="automatic">Automatic</option>
+                                        <option value="manual">Manual</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="kapasitas" class="form-label">Kapasitas Penumpang</label>
+                                    <input type="number" class="form-control" id="kapasitas" name="kapasitas" 
+                                           min="2" max="12" value="5" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="harga_per_hari" class="form-label">Harga per Hari (Rp)</label>
+                                    <input type="number" class="form-control" id="harga_per_hari" name="harga_per_hari" 
+                                           min="100000" step="50000" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label for="deskripsi" class="form-label">Deskripsi</label>
+                            <textarea class="form-control" id="deskripsi" name="deskripsi" rows="4" 
+                                      placeholder="Deskripsi lengkap tentang mobil..."></textarea>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_cars') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Simpan Mobil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card border-0 shadow mt-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Panduan Pengisian</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><strong>Merk & Model:</strong> Contoh: Toyota Avanza</li>
+                                <li><strong>Plat Nomor:</strong> Gunakan format yang benar</li>
+                                <li><strong>Tahun:</strong> Tahun pembuatan mobil</li>
+                                <li><strong>Tipe:</strong> Sesuaikan dengan kategori mobil</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><strong>Harga per Hari:</strong> Minimal Rp 100.000</li>
+                                <li><strong>Gambar:</strong> Ukuran maksimal 2MB</li>
+                                <li><strong>Status:</strong> Otomatis "Tersedia"</li>
+                                <li><strong>Deskripsi:</strong> Berikan informasi detail</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Image preview
+function previewImage(input) {
+    const preview = document.getElementById('imagePreview');
+    const file = input.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+        }
+        
+        reader.readAsDataURL(file);
+    } else {
+        preview.src = 'https://via.placeholder.com/300x200?text=Preview+Gambar';
+    }
+}
+
+// Set current year for max year
+const now = new Date();
+const nowYear = now.getFullYear();
+document.getElementById('tahun').max = nowYear;
+
+// Form validation
+document.getElementById('addCarForm').addEventListener('submit', function(e) {
+    const platNomor = document.getElementById('plat_nomor').value;
+    const harga = document.getElementById('harga_per_hari').value;
+    const kapasitas = document.getElementById('kapasitas').value;
+    
+    // Plat nomor validation (simple format)
+    if (!/^[A-Za-z]+\s+\d+\s+[A-Za-z]+$/.test(platNomor)) {
+        e.preventDefault();
+        alert('Format plat nomor tidak valid. Contoh: B 1234 ABC');
+        return false;
+    }
+    
+    // Price validation
+    if (parseInt(harga) < 100000) {
+        e.preventDefault();
+        alert('Harga per hari minimal Rp 100.000');
+        return false;
+    }
+    
+    // Capacity validation
+    if (parseInt(kapasitas) < 2 || parseInt(kapasitas) > 12) {
+        e.preventDefault();
+        alert('Kapasitas harus antara 2-12 orang');
+        return false;
+    }
+    
+    return true;
+});
+
+// Format price input
+document.getElementById('harga_per_hari').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
+});
+</script>
+{% endblock %}

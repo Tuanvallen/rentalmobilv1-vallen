@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}{{ car.merk }} {{ car.model }} - Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('catalog') }}">Katalog Mobil</a></li>
+            <li class="breadcrumb-item active">{{ car.merk }} {{ car.model }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Car Images & Main Info -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body p-4">
+                    <!-- Main Image -->
+                    <div class="text-center mb-4">
+                        {% if car.gambar %}
+                        <img src="{{ url_for('serve_upload', filename='cars/' + car.gambar) }}" 
+                             class="img-fluid rounded" alt="{{ car.merk }} {{ car.model }}" 
+                             style="max-height: 400px; object-fit: contain;">
+                        {% else %}
+                        <img src="https://via.placeholder.com/800x400?text=No+Image" 
+                             class="img-fluid rounded" alt="No Image">
+                        {% endif %}
+                    </div>
+
+                    <!-- Quick Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="p-3 border rounded">
+                                <i class="fas fa-calendar fa-2x text-primary mb-2"></i>
+                                <h6 class="mb-0">Tahun</h6>
+                                <p class="fw-bold mb-0">{{ car.tahun }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="p-3 border rounded">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h6 class="mb-0">Kapasitas</h6>
+                                <p class="fw-bold mb-0">{{ car.kapasitas }} Orang</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="p-3 border rounded">
+                                <i class="fas fa-cog fa-2x text-primary mb-2"></i>
+                                <h6 class="mb-0">Transmisi</h6>
+                                <p class="fw-bold mb-0">{{ car.transmisi|title }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="p-3 border rounded">
+                                <i class="fas fa-car fa-2x text-primary mb-2"></i>
+                                <h6 class="mb-0">Tipe</h6>
+                                <p class="fw-bold mb-0">{{ car.tipe|title }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h4 class="fw-bold mb-3">Deskripsi</h4>
+                        <p>{{ car.deskripsi if car.deskripsi else 'Deskripsi tidak tersedia.' }}</p>
+                    </div>
+
+                    <!-- Specifications -->
+                    <div class="mb-4">
+                        <h4 class="fw-bold mb-3">Spesifikasi Teknis</h4>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th width="30%">Merk</th>
+                                        <td>{{ car.merk }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Model</th>
+                                        <td>{{ car.model }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Plat Nomor</th>
+                                        <td>{{ car.plat_nomor }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tahun</th>
+                                        <td>{{ car.tahun }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tipe</th>
+                                        <td>{{ car.tipe|title }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Transmisi</th>
+                                        <td>{{ car.transmisi|title }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Kapasitas</th>
+                                        <td>{{ car.kapasitas }} Orang</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status</th>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if car.status == 'tersedia' else 'danger' if car.status == 'disewa' else 'warning' }}">
+                                                {{ car.status|title }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Panel -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow sticky-top" style="top: 20px;">
+                <div class="card-body p-4">
+                    <!-- Price -->
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold text-primary">Rp {{ "{:,.0f}".format(car.harga_per_hari) }}</h3>
+                        <p class="text-muted mb-0">/ hari</p>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="alert alert-{{ 'success' if car.status == 'tersedia' else 'danger' }} mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-{{ 'check-circle' if car.status == 'tersedia' else 'times-circle' }} fa-2x me-3"></i>
+                            <div>
+                                <h5 class="mb-0">{{ 'Tersedia' if car.status == 'tersedia' else 'Tidak Tersedia' }}</h5>
+                                <p class="mb-0">
+                                    {% if car.status == 'tersedia' %}
+                                    Mobil siap untuk disewa
+                                    {% elif car.status == 'disewa' %}
+                                    Sedang disewa
+                                    {% else %}
+                                    Dalam perawatan
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Button -->
+                    {% if car.status == 'tersedia' %}
+                        {% if session.user_id %}
+                        <a href="{{ url_for('booking', car_id=car.id) }}" class="btn btn-warning btn-lg w-100 mb-3">
+                            <i class="fas fa-calendar-check me-2"></i> Sewa Sekarang
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg w-100 mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i> Login untuk Menyewa
+                        </a>
+                        <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-user-plus me-2"></i> Daftar Akun
+                        </a>
+                        {% endif %}
+                    {% else %}
+                    <button class="btn btn-secondary btn-lg w-100" disabled>
+                        <i class="fas fa-times me-2"></i> Tidak Tersedia
+                    </button>
+                    {% endif %}
+
+                    <!-- Contact Info -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-headset me-2"></i>Butuh Bantuan?</h6>
+                        <div class="d-grid gap-2">
+                            <a href="tel:+622112345678" class="btn btn-outline-primary">
+                                <i class="fas fa-phone me-2"></i> Telepon: 021-12345678
+                            </a>
+                            {% if session.user_id %}
+                            <a href="{{ url_for('chat') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-comments me-2"></i> Chat dengan Admin
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Share -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-share-alt me-2"></i>Bagikan</h6>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="fab fa-facebook-f"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="fab fa-twitter"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Cars -->
+    {% if similar_cars %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">Mobil Serupa</h3>
+            <div class="row">
+                {% for similar in similar_cars %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 border-0 shadow">
+                        {% if similar.gambar %}
+                        <img src="{{ url_for('serve_upload', filename='cars/' + similar.gambar) }}" 
+                             class="card-img-top" alt="{{ similar.merk }} {{ similar.model }}" 
+                             style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <img src="https://via.placeholder.com/300x180?text=No+Image" 
+                             class="card-img-top" alt="No Image">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ similar.merk }} {{ similar.model }}</h5>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> {{ similar.tahun }} | 
+                                    <i class="fas fa-users"></i> {{ similar.kapasitas }} | 
+                                    <i class="fas fa-cog"></i> {{ similar.transmisi }}
+                                </small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 text-primary fw-bold">Rp {{ "{:,.0f}".format(similar.harga_per_hari) }}/hari</span>
+                                <a href="{{ url_for('car_detail', car_id=similar.id) }}" class="btn btn-sm btn-primary">
+                                    Detail
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Reviews (Placeholder) -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <h3 class="fw-bold mb-4">Ulasan Pelanggan</h3>
+                    <div class="text-center py-5">
+                        <i class="fas fa-comments fa-4x text-muted mb-3"></i>
+                        <h5>Belum ada ulasan</h5>
+                        <p class="text-muted">Jadilah yang pertama memberikan ulasan untuk mobil ini</p>
+                        {% if session.user_id and car.status == 'tersedia' %}
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                            <i class="fas fa-star me-2"></i> Beri Ulasan
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Beri Ulasan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="rating-stars">
+                            <i class="fas fa-star star" data-rating="1"></i>
+                            <i class="fas fa-star star" data-rating="2"></i>
+                            <i class="fas fa-star star" data-rating="3"></i>
+                            <i class="fas fa-star star" data-rating="4"></i>
+                            <i class="fas fa-star star" data-rating="5"></i>
+                        </div>
+                        <input type="hidden" id="rating" name="rating" value="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewComment" class="form-label">Komentar</label>
+                        <textarea class="form-control" id="reviewComment" rows="4" 
+                                  placeholder="Bagikan pengalaman Anda..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="submitReview()">Kirim Ulasan</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.star {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star:hover,
+.star.active {
+    color: #ffc107;
+}
+
+.rating-stars {
+    display: flex;
+    gap: 5px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Star rating
+const stars = document.querySelectorAll('.star');
+const ratingInput = document.getElementById('rating');
+
+stars.forEach(star => {
+    star.addEventListener('click', function() {
+        const rating = this.getAttribute('data-rating');
+        ratingInput.value = rating;
+        
+        // Update star display
+        stars.forEach(s => {
+            if (s.getAttribute('data-rating') <= rating) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    });
+    
+    // Hover effect
+    star.addEventListener('mouseover', function() {
+        const rating = this.getAttribute('data-rating');
+        stars.forEach(s => {
+            if (s.getAttribute('data-rating') <= rating) {
+                s.classList.add('hover');
+            } else {
+                s.classList.remove('hover');
+            }
+        });
+    });
+    
+    star.addEventListener('mouseout', function() {
+        stars.forEach(s => s.classList.remove('hover'));
+    });
+});
+
+function submitReview() {
+    const rating = ratingInput.value;
+    const comment = document.getElementById('reviewComment').value;
+    
+    if (rating == 0) {
+        alert('Harap beri rating!');
+        return;
+    }
+    
+    // In real app, make AJAX request here
+    alert('Terima kasih atas ulasan Anda! Ulasan akan ditampilkan setelah moderasi.');
+    
+    // Reset form and close modal
+    document.getElementById('reviewForm').reset();
+    ratingInput.value = 0;
+    stars.forEach(s => s.classList.remove('active'));
+    bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+}
+
+// Share functionality
+document.querySelectorAll('.btn-outline-primary.btn-sm').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const url = window.location.href;
+        const title = document.title;
+        
+        if (this.querySelector('.fa-facebook-f')) {
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+        } else if (this.querySelector('.fa-twitter')) {
+            window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`, '_blank');
+        } else if (this.querySelector('.fa-whatsapp')) {
+            window.open(`https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`, '_blank');
+        } else if (this.querySelector('.fa-link')) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link berhasil disalin!');
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

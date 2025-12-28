@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesanan Saya - Rental Mobil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .orders-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 15px;
+        }
+        .order-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .car-image-small {
+            width: 100px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+        }
+        .badge-lunas {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .badge-pending {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: white;
+        }
+        .badge-failed {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    {% extends 'base.html' %}
+    
+    {% block content %}
+    <div class="orders-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-shopping-cart"></i> Pesanan Saya</h2>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('payment_history') }}" class="btn btn-outline-success">
+                    <i class="fas fa-history"></i> Riwayat Pembayaran
+                </a>
+                <a href="{{ url_for('catalog') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Pesan Mobil Baru
+                </a>
+            </div>
+        </div>
+        
+        <!-- Filter Buttons -->
+        <div class="filter-buttons mb-4">
+            <a href="{{ url_for('user_orders') }}" 
+               class="btn {% if status == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <i class="fas fa-list"></i> Semua ({{ total }})
+            </a>
+            <a href="{{ url_for('user_orders') }}?status=paid" 
+               class="btn {% if status == 'paid' %}btn-success{% else %}btn-outline-success{% endif %}">
+                <i class="fas fa-check-circle"></i> Lunas ({{ counts.paid if counts else 0 }})
+            </a>
+            <a href="{{ url_for('user_orders') }}?status=pending" 
+               class="btn {% if status == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                <i class="fas fa-clock"></i> Belum Bayar ({{ counts.pending if counts else 0 }})
+            </a>
+            <a href="{{ url_for('user_orders') }}?status=failed" 
+               class="btn {% if status == 'failed' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                <i class="fas fa-times-circle"></i> Gagal ({{ counts.failed if counts else 0 }})
+            </a>
+        </div>
+        
+        {% if orders %}
+        <!-- Orders List -->
+        <div class="row">
+            {% for order in orders %}
+            <div class="col-md-6 col-lg-4">
+                <div class="order-card p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-1">{{ order.merk }} {{ order.model }}</h6>
+                            <small class="text-muted">#{{ order.kode_pesanan }}</small>
+                        </div>
+                        <div>
+                            {% if order.status_pembayaran == 'paid' %}
+                                <span class="badge badge-lunas">
+                                    <i class="fas fa-check"></i> LUNAS
+                                </span>
+                            {% elif order.status_pembayaran == 'pending' %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-clock"></i> BELUM BAYAR
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times"></i> GAGAL
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-2">
+                        <div class="col-4">
+                            {% if order.gambar %}
+                            <img src="{{ url_for('static', filename='uploads/cars/' + order.gambar) }}" 
+                                 alt="{{ order.merk }}" class="car-image-small">
+                            {% else %}
+                            <div class="car-image-small bg-light d-flex align-items-center justify-content-center">
+                                <i class="fas fa-car text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-8">
+                            <p class="mb-1"><small><i class="fas fa-calendar"></i> {{ order.tanggal_mulai }} - {{ order.tanggal_selesai }}</small></p>
+                            <p class="mb-1"><small><i class="fas fa-clock"></i> {{ order.durasi_hari }} hari</small></p>
+                            <p class="mb-0"><strong><i class="fas fa-money-bill"></i> Rp {{ "{:,.0f}".format(order.total_harga) }}</strong></p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{{ url_for('order_detail', order_code=order.kode_pesanan) }}" 
+                           class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-eye"></i> Detail
+                        </a>
+                        
+                        {% if order.status_pembayaran == 'pending' %}
+                        <a href="{{ url_for('payment', order_id=order.kode_pesanan) }}" 
+                           class="btn btn-sm btn-success">
+                            <i class="fas fa-credit-card"></i> Bayar
+                        </a>
+                        {% elif order.status_pembayaran == 'paid' %}
+                        <a href="{{ url_for('invoice', order_id=order.kode_pesanan) }}" 
+                           class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-receipt"></i> Invoice
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('user_orders', page=page-1, status=status) }}">
+                        <i class="fas fa-chevron-left"></i> Sebelumnya
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('user_orders', page=p, status=status) }}">
+                        {{ p }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('user_orders', page=page+1, status=status) }}">
+                        Selanjutnya <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <i class="fas fa-shopping-cart fa-4x mb-3"></i>
+            <h4>Belum ada pesanan</h4>
+            <p class="mb-4">Mulai pesan mobil sekarang dan nikmati perjalanan Anda!</p>
+            <a href="{{ url_for('catalog') }}" class="btn btn-primary">
+                <i class="fas fa-car"></i> Lihat Katalog Mobil
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endblock %}
+</body>
+</html>

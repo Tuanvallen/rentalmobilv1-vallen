@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Pesanan - Rental Mobil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .order-detail-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 15px;
+        }
+        .detail-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .car-image-large {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .status-paid {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .invoice-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    {% extends 'base.html' %}
+    
+    {% block content %}
+    <div class="order-detail-container">
+        <!-- Order Header -->
+        <div class="detail-card {% if order.status_pembayaran == 'paid' %}bg-success text-white{% else %}bg-primary text-white{% endif %}">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-2">Pesanan #{{ order.kode_pesanan }}</h3>
+                    <p class="mb-0">
+                        <i class="fas fa-car"></i> {{ order.merk }} {{ order.model }} • 
+                        <i class="fas fa-calendar"></i> {{ order.tanggal_mulai }} - {{ order.tanggal_selesai }}
+                    </p>
+                </div>
+                <div class="text-end">
+                    <h4>Rp {{ "{:,.0f}".format(order.total_harga) }}</h4>
+                    <span class="{% if order.status_pembayaran == 'paid' %}status-paid{% else %}badge bg-warning fs-6{% endif %}">
+                        {% if order.status_pembayaran == 'paid' %}
+                            <i class="fas fa-check-circle"></i> LUNAS
+                        {% elif order.status_pembayaran == 'pending' %}
+                            <i class="fas fa-clock"></i> BELUM BAYAR
+                        {% else %}
+                            <i class="fas fa-times-circle"></i> GAGAL
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success Alert for Paid Orders -->
+        {% if order.status_pembayaran == 'paid' %}
+        <div class="alert alert-success d-flex align-items-center" role="alert">
+            <i class="fas fa-check-circle fa-2x me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">Pembayaran Berhasil!</h5>
+                <p class="mb-0">Pesanan Anda telah dikonfirmasi. Terima kasih telah menggunakan layanan kami.</p>
+            </div>
+        </div>
+        
+        <!-- Invoice Section for Paid Orders -->
+        <div class="invoice-section mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5><i class="fas fa-receipt"></i> Invoice Tersedia</h5>
+                    <p class="mb-0">Unduh invoice untuk keperluan administrasi dan bukti pembayaran.</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('invoice', order_id=order.kode_pesanan) }}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Download Invoice
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="row">
+            <!-- Car Details -->
+            <div class="col-md-6">
+                <div class="detail-card">
+                    <h5 class="mb-3"><i class="fas fa-car"></i> Detail Mobil</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {% if order.gambar %}
+                            <img src="{{ url_for('static', filename='uploads/cars/' + order.gambar) }}" 
+                                 alt="{{ order.merk }}" class="car-image-large">
+                            {% else %}
+                            <div class="car-image-large bg-light d-flex align-items-center justify-content-center">
+                                <i class="fas fa-car fa-4x text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <p><i class="fas fa-car me-2"></i><strong>Merk/Model:</strong> {{ order.merk }} {{ order.model }}</p>
+                            <p><i class="fas fa-calendar me-2"></i><strong>Tahun:</strong> {{ order.tahun }}</p>
+                            <p><i class="fas fa-id-card me-2"></i><strong>Plat Nomor:</strong> {{ order.plat_nomor }}</p>
+                            <p><i class="fas fa-cog me-2"></i><strong>Tipe:</strong> {{ order.tipe|title }}</p>
+                            <p><i class="fas fa-bolt me-2"></i><strong>Transmisi:</strong> {{ order.transmisi|title }}</p>
+                            <p><i class="fas fa-users me-2"></i><strong>Kapasitas:</strong> {{ order.kapasitas }} orang</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Details -->
+            <div class="col-md-6">
+                <div class="detail-card">
+                    <h5 class="mb-3"><i class="fas fa-file-invoice"></i> Detail Pesanan</h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <td width="40%"><i class="fas fa-hashtag me-2"></i><strong>Kode Pesanan:</strong></td>
+                            <td>{{ order.kode_pesanan }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-calendar-plus me-2"></i><strong>Tanggal Pesan:</strong></td>
+                            <td>{{ order.tanggal_pemesanan.strftime('%d-%m-%Y %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-calendar-alt me-2"></i><strong>Tanggal Sewa:</strong></td>
+                            <td>{{ order.tanggal_mulai }} hingga {{ order.tanggal_selesai }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-clock me-2"></i><strong>Durasi:</strong></td>
+                            <td>{{ order.durasi_hari }} hari</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-map-marker-alt me-2"></i><strong>Lokasi Penjemputan:</strong></td>
+                            <td>{{ order.lokasi_penjemputan or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-sticky-note me-2"></i><strong>Catatan:</strong></td>
+                            <td>{{ order.catatan or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-credit-card me-2"></i><strong>Metode Pembayaran:</strong></td>
+                            <td>{{ order.metode_pembayaran|title }}</td>
+                        </tr>
+                        {% if order.status_pembayaran == 'paid' and order.tanggal_pembayaran %}
+                        <tr>
+                            <td><i class="fas fa-calendar-check me-2"></i><strong>Tanggal Bayar:</strong></td>
+                            <td>{{ order.tanggal_pembayaran.strftime('%d-%m-%Y %H:%M') }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+                
+                <!-- Price Breakdown -->
+                <div class="detail-card">
+                    <h5 class="mb-3"><i class="fas fa-money-bill-wave"></i> Rincian Harga</h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><i class="fas fa-tag me-2"></i>Harga per hari</td>
+                            <td class="text-end">Rp {{ "{:,.0f}".format(order.harga_per_hari) }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-calendar-day me-2"></i>Durasi ({{ order.durasi_hari }} hari)</td>
+                            <td class="text-end">× {{ order.durasi_hari }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><hr class="my-2"></td>
+                        </tr>
+                        <tr class="table-active">
+                            <th><i class="fas fa-calculator me-2"></i>Total Harga</th>
+                            <th class="text-end">Rp {{ "{:,.0f}".format(order.total_harga) }}</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment Status -->
+<div class="detail-card">
+    <h5 class="mb-3"><i class="fas fa-credit-card"></i> Status Pembayaran</h5>
+    <div class="row">
+        <div class="col-md-12">
+            {% if order.status_pembayaran == 'pending' %}
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-exclamation-triangle"></i> Pembayaran Belum Lunas</h6>
+                <p>Silakan selesaikan pembayaran untuk mengkonfirmasi pesanan Anda.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('payment', order_id=order.kode_pesanan) }}" 
+                       class="btn btn-success">
+                        <i class="fas fa-credit-card"></i> Bayar Sekarang
+                    </a>
+                    <button onclick="checkPaymentStatus('{{ order.kode_pesanan }}')" 
+                            class="btn btn-outline-warning">
+                        <i class="fas fa-sync-alt"></i> Cek Status
+                    </button>
+                    <!-- TAMBAHKAN TOMBOL SYNC DISINI -->
+                    <button onclick="syncPaymentStatus('{{ order.kode_pesanan }}')" 
+                            class="btn btn-outline-primary">
+                        <i class="fas fa-sync-alt"></i> Sync dari Midtrans
+                    </button>
+                    <a href="{{ url_for('chat') }}?admin_id=1" class="btn btn-outline-primary">
+                        <i class="fas fa-comment"></i> Tanya Admin
+                    </a>
+                </div>
+            </div>
+            {% elif order.status_pembayaran == 'paid' %}
+            <div class="alert alert-success">
+                <h6><i class="fas fa-check-circle"></i> Pembayaran Lunas</h6>
+                <p class="mb-3">Pesanan Anda telah dikonfirmasi. Silakan hubungi admin untuk pengambilan mobil.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('payment_success_page', order_id=order.kode_pesanan) }}" 
+                       class="btn btn-success">
+                        <i class="fas fa-check"></i> Lihat Konfirmasi
+                    </a>
+                    <a href="{{ url_for('chat') }}?admin_id=1" class="btn btn-primary">
+                        <i class="fas fa-comment"></i> Chat Admin
+                    </a>
+                    <a href="{{ url_for('invoice', order_id=order.kode_pesanan) }}" 
+                       class="btn btn-outline-success">
+                        <i class="fas fa-receipt"></i> Invoice
+                    </a>
+                </div>
+            </div>
+            {% elif order.status_pembayaran == 'failed' %}
+            <div class="alert alert-danger">
+                <h6><i class="fas fa-times-circle"></i> Pembayaran Gagal</h6>
+                <p>Pembayaran Anda mengalami kendala. Silakan coba lagi atau hubungi admin.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('payment', order_id=order.kode_pesanan) }}" 
+                       class="btn btn-danger">
+                        <i class="fas fa-redo"></i> Coba Lagi
+                    </a>
+                    <!-- TAMBAHKAN TOMBOL SYNC DISINI JUGA -->
+                    <button onclick="syncPaymentStatus('{{ order.kode_pesanan }}')" 
+                            class="btn btn-outline-warning">
+                        <i class="fas fa-sync-alt"></i> Sync Status
+                    </button>
+                    <a href="{{ url_for('chat') }}?admin_id=1" class="btn btn-outline-danger">
+                        <i class="fas fa-headset"></i> Bantuan Admin
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+        
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('user_orders') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Kembali ke Daftar Pesanan
+            </a>
+            <div class="d-flex gap-2">
+                {% if order.status_pembayaran == 'pending' %}
+                <a href="{{ url_for('payment', order_id=order.kode_pesanan) }}" class="btn btn-primary">
+                    <i class="fas fa-credit-card"></i> Lanjutkan Pembayaran
+                </a>
+                {% elif order.status_pembayaran == 'paid' %}
+                <a href="{{ url_for('payment_history') }}" class="btn btn-outline-success">
+                    <i class="fas fa-history"></i> Riwayat Pembayaran
+                </a>
+                {% endif %}
+                <a href="{{ url_for('chat') }}?admin_id=1" class="btn btn-outline-info">
+                    <i class="fas fa-headset"></i> Bantuan
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    function checkPaymentStatus(orderId) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memeriksa...';
+        
+        fetch(`/api/check-payment/${orderId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.new_status === 'paid') {
+                        alert('✅ Pembayaran berhasil! Status telah diperbarui.');
+                        location.reload();
+                    } else if (data.midtrans_status) {
+                        alert('Status pembayaran di Midtrans: ' + data.midtrans_status + '\nStatus di sistem: ' + data.local_status);
+                    } else {
+                        alert('Status: ' + data.local_status);
+                    }
+                } else {
+                    alert('❌ Gagal memeriksa status: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('⚠️ Terjadi kesalahan saat memeriksa status.');
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+    }
+    </script>
+    {% endblock %}
+
+    <!-- Tambahkan script ini di bagian bawah sebelum </body> -->
+<script>
+    // Fungsi untuk sync status dari Midtrans
+    function syncPaymentStatus(orderId) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+        
+        fetch(`/api/sync-payment/${orderId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let message = '✅ Status berhasil disinkronisasi!';
+                if (data.midtrans_status) {
+                    message += `\nStatus di Midtrans: ${data.midtrans_status}`;
+                }
+                alert(message);
+                
+                // Reload halaman setelah 1.5 detik
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                alert('❌ Gagal sync: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('⚠️ Terjadi kesalahan saat sync. Coba lagi nanti.');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        });
+    }
+    
+    // Fungsi existing untuk cek status (jika ada)
+    function checkPaymentStatus(orderId) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memeriksa...';
+        
+        fetch(`/api/check-payment/${orderId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.new_status === 'paid') {
+                    alert('✅ Pembayaran berhasil! Status telah diperbarui.');
+                    location.reload();
+                } else if (data.midtrans_status) {
+                    alert('Status pembayaran di Midtrans: ' + data.midtrans_status + '\nStatus di sistem: ' + data.local_status);
+                } else {
+                    alert('Status: ' + data.local_status);
+                }
+            } else {
+                alert('❌ Gagal memeriksa status: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('⚠️ Terjadi kesalahan saat memeriksa status.');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        });
+    }
+    </script>
+</body>
+</html>

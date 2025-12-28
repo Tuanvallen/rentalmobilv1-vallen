@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}403 - Akses Ditolak{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-page">
+                <h1 class="display-1 text-warning fw-bold">403</h1>
+                <h2 class="mb-4">Akses Ditolak</h2>
+                <p class="lead mb-4">Maaf, Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+                <div class="mb-4">
+                    <i class="fas fa-lock fa-4x text-warning mb-4"></i>
+                </div>
+                <p>Halaman ini membutuhkan otentikasi khusus atau peran pengguna tertentu.</p>
+                <div class="mt-5">
+                    {% if not session.user_id %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-sign-in-alt me-2"></i> Login
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-home me-2"></i> Kembali ke Beranda
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

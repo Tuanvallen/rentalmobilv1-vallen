@@ -1,0 +1,658 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Pesanan - Admin Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h2 fw-bold mb-2">Kelola Pesanan</h1>
+                            <p class="text-muted mb-0">Total {{ total }} pesanan</p>
+                        </div>
+                        <!-- Stats -->
+                        {% if stats %}
+                        <div class="text-end">
+                            <div class="d-flex">
+                                <div class="me-4">
+                                    <h5 class="mb-1 text-success">Rp {{ "{:,.0f}".format(stats.total_revenue) }}</h5>
+                                    <small class="text-muted">Total Pendapatan</small>
+                                </div>
+                                <div class="me-4">
+                                    <h5 class="mb-1 text-primary">{{ stats.total_orders }}</h5>
+                                    <small class="text-muted">Total Pesanan</small>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 text-success">{{ stats.paid_orders }}</h5>
+                                    <small class="text-muted">Lunas</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('admin_orders') }}" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Cari Pesanan</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search }}" placeholder="Customer, mobil, kode...">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status Pesanan</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="all" {% if status == 'all' %}selected{% endif %}>Semua Status</option>
+                                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="diproses" {% if status == 'diproses' %}selected{% endif %}>Diproses</option>
+                                <option value="dikonfirmasi" {% if status == 'dikonfirmasi' %}selected{% endif %}>Dikonfirmasi</option>
+                                <option value="dibatalkan" {% if status == 'dibatalkan' %}selected{% endif %}>Dibatalkan</option>
+                                <option value="selesai" {% if status == 'selesai' %}selected{% endif %}>Selesai</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="payment_status" class="form-label">Status Pembayaran</label>
+                            <select class="form-select" id="payment_status" name="payment_status">
+                                <option value="all" {% if payment_status == 'all' %}selected{% endif %}>Semua Status</option>
+                                <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>Lunas</option>
+                                <option value="pending" {% if payment_status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="failed" {% if payment_status == 'failed' %}selected{% endif %}>Gagal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="start_date" class="form-label">Tanggal Mulai</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ start_date }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="end_date" class="form-label">Tanggal Akhir</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ end_date }}">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Kode Pesanan</th>
+                                    <th>Customer</th>
+                                    <th>Mobil</th>
+                                    <th>Tanggal</th>
+                                    <th>Durasi</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Pembayaran</th>
+                                    <th width="180" class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if orders %}
+                                    {% for order in orders %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ order.kode_pesanan }}</strong><br>
+                                            <small class="text-muted">{{ order.tanggal_pemesanan.strftime('%d/%m/%Y %H:%M') }}</small>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-0">{{ order.customer_name }}</h6>
+                                                <small class="text-muted">{{ order.no_telepon or '-' }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-0">{{ order.merk }} {{ order.model }}</h6>
+                                                <small class="text-muted">{{ order.plat_nomor }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {{ order.tanggal_mulai.strftime('%d/%m/%Y') }}<br>
+                                            <small>s/d {{ order.tanggal_selesai.strftime('%d/%m/%Y') }}</small>
+                                        </td>
+                                        <td>
+                                            {{ order.durasi_hari }} hari
+                                        </td>
+                                        <td>
+                                            <strong class="text-primary">Rp {{ "{:,.0f}".format(order.total_harga) }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if order.status == 'pending' %}
+                                            <span class="badge bg-secondary">Pending</span>
+                                            {% elif order.status == 'diproses' %}
+                                            <span class="badge bg-info">Diproses</span>
+                                            {% elif order.status == 'dikonfirmasi' %}
+                                            <span class="badge bg-success">Dikonfirmasi</span>
+                                            {% elif order.status == 'dibatalkan' %}
+                                            <span class="badge bg-danger">Dibatalkan</span>
+                                            {% elif order.status == 'selesai' %}
+                                            <span class="badge bg-primary">Selesai</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if order.status_pembayaran == 'paid' %}
+                                            <span class="badge bg-success">Lunas</span>
+                                            {% elif order.status_pembayaran == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                            {% elif order.status_pembayaran == 'failed' %}
+                                            <span class="badge bg-danger">Gagal</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ order.status_pembayaran|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <!-- Update Payment Status Button -->
+                                                <button class="btn btn-warning" 
+                                                        onclick="openUpdatePaymentModal('{{ order.kode_pesanan }}', '{{ order.status }}', '{{ order.status_pembayaran }}')"
+                                                        title="Update Status Pembayaran">
+                                                    <i class="fas fa-money-bill-wave"></i>
+                                                </button>
+                                                <!-- Update Order Status Button -->
+                                                <button class="btn btn-primary" 
+                                                        onclick="openUpdateOrderModal('{{ order.kode_pesanan }}', '{{ order.status }}')"
+                                                        title="Update Status Pesanan">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <!-- View Details Button -->
+                                                <a href="#" class="btn btn-info" 
+                                                   onclick="viewOrder('{{ order.kode_pesanan }}')"
+                                                   title="Detail">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-5">
+                                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                                        <h5>Tidak ada pesanan ditemukan</h5>
+                                        <p class="text-muted">Coba ubah filter pencarian Anda</p>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_orders', page=page-1, status=status, payment_status=payment_status, search=search, start_date=start_date, end_date=end_date) if page > 1 else '#' }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p >= page-2 and p <= page+2 %}
+                        <li class="page-item {% if p == page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin_orders', page=p, status=status, payment_status=payment_status, search=search, start_date=start_date, end_date=end_date) }}">{{ p }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_orders', page=page+1, status=status, payment_status=payment_status, search=search, start_date=start_date, end_date=end_date) if page < total_pages else '#' }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Update Order Status Modal -->
+<div class="modal fade" id="updateOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Status Pesanan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="" id="updateOrderForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="order_status" class="form-label">Status Pesanan Baru</label>
+                        <select class="form-select" id="order_status" name="status" required>
+                            <option value="pending">Pending</option>
+                            <option value="diproses">Diproses</option>
+                            <option value="dikonfirmasi">Dikonfirmasi</option>
+                            <option value="dibatalkan">Dibatalkan</option>
+                            <option value="selesai">Selesai</option>
+                        </select>
+                    </div>
+                    <p class="text-muted"><small>Kode Pesanan: <span id="orderCodeText"></span></small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Update Status Pesanan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Payment Status Modal -->
+<div class="modal fade" id="updatePaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Status Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="" id="updatePaymentForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="payment_status" class="form-label">Status Pembayaran Baru</label>
+                        <select class="form-select" id="payment_status" name="payment_status" required>
+                            <option value="paid">Lunas (Paid)</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Gagal (Failed)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="order_status" class="form-label">Status Pesanan (Optional)</label>
+                        <select class="form-select" id="order_status" name="status">
+                            <option value="">-- Pilih Status Pesanan --</option>
+                            <option value="pending">Pending</option>
+                            <option value="diproses">Diproses</option>
+                            <option value="dikonfirmasi">Dikonfirmasi</option>
+                            <option value="dibatalkan">Dibatalkan</option>
+                            <option value="selesai">Selesai</option>
+                        </select>
+                        <div class="form-text">Jika dikosongkan, status pesanan akan disesuaikan otomatis</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Status otomatis saat pembayaran lunas: Pending → Dikonfirmasi</small>
+                    </div>
+                    <p class="text-muted"><small>Kode Pesanan: <span id="paymentOrderCodeText"></span></small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning">Update Status Pembayaran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Order Modal -->
+<div class="modal fade" id="viewOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Pesanan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailContent">
+                <!-- Content will be loaded by JavaScript -->
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Memuat data pesanan...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Open update order status modal
+function openUpdateOrderModal(orderCode, currentStatus) {
+    document.getElementById('orderCodeText').textContent = orderCode;
+    document.getElementById('order_status').value = currentStatus;
+    
+    // Set form action
+    const form = document.getElementById('updateOrderForm');
+    form.action = "{{ url_for('admin_order_update', order_code='PLACEHOLDER') }}".replace('PLACEHOLDER', orderCode);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('updateOrderModal'));
+    modal.show();
+}
+
+// Open update payment status modal
+function openUpdatePaymentModal(orderCode, currentOrderStatus, currentPaymentStatus) {
+    document.getElementById('paymentOrderCodeText').textContent = orderCode;
+    document.getElementById('payment_status').value = currentPaymentStatus;
+    document.getElementById('order_status').value = currentOrderStatus;
+    
+    // Set form action - NEW ROUTE for payment status update
+    const form = document.getElementById('updatePaymentForm');
+    form.action = "{{ url_for('admin_order_update_payment', order_code='PLACEHOLDER') }}".replace('PLACEHOLDER', orderCode);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('updatePaymentModal'));
+    modal.show();
+}
+
+// View order details
+function viewOrder(orderCode) {
+    // Reset modal content
+    document.getElementById('orderDetailContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Memuat data pesanan...</p>
+        </div>
+    `;
+    
+    // Fetch order details
+    fetch("{{ url_for('api_admin_order_detail', order_code='PLACEHOLDER') }}".replace('PLACEHOLDER', orderCode))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const order = data.order;
+                const content = document.getElementById('orderDetailContent');
+                
+                // Format date
+                function formatDate(dateString) {
+                    if (!dateString) return '-';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('id-ID', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+                
+                // Format short date
+                function formatShortDate(dateString) {
+                    if (!dateString) return '-';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                }
+                
+                // Format currency
+                function formatCurrency(amount) {
+                    return new Intl.NumberFormat('id-ID').format(amount || 0);
+                }
+                
+                // Status badge
+                function getStatusBadge(status) {
+                    const badges = {
+                        'pending': 'secondary',
+                        'diproses': 'info',
+                        'dikonfirmasi': 'success',
+                        'dibatalkan': 'danger',
+                        'selesai': 'primary'
+                    };
+                    return `<span class="badge bg-${badges[status] || 'secondary'}">${status}</span>`;
+                }
+                
+                // Payment status badge
+                function getPaymentBadge(status) {
+                    const badges = {
+                        'paid': 'success',
+                        'pending': 'warning',
+                        'failed': 'danger'
+                    };
+                    const labels = {
+                        'paid': 'Lunas',
+                        'pending': 'Pending',
+                        'failed': 'Gagal'
+                    };
+                    return `<span class="badge bg-${badges[status] || 'secondary'}">${labels[status] || status}</span>`;
+                }
+                
+                content.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-receipt me-2"></i>Informasi Pesanan</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="45%"><strong>Kode Pesanan</strong></td>
+                                    <td><code>${order.kode_pesanan}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tanggal Pemesanan</strong></td>
+                                    <td>${formatDate(order.tanggal_pemesanan)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status Pesanan</strong></td>
+                                    <td>${getStatusBadge(order.status)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status Pembayaran</strong></td>
+                                    <td>${getPaymentBadge(order.status_pembayaran)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Metode Pembayaran</strong></td>
+                                    <td>${order.metode_pembayaran || 'midtrans'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Harga</strong></td>
+                                    <td><strong class="text-primary">Rp ${formatCurrency(order.total_harga)}</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-user me-2"></i>Informasi Customer</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="45%"><strong>Nama</strong></td>
+                                    <td>${order.customer_name}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email</strong></td>
+                                    <td><a href="mailto:${order.customer_email}">${order.customer_email}</a></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>No. Telepon</strong></td>
+                                    <td>${order.customer_phone || '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-car me-2"></i>Informasi Mobil</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="45%"><strong>Mobil</strong></td>
+                                    <td>${order.merk} ${order.model}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Plat Nomor</strong></td>
+                                    <td><code>${order.plat_nomor}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tipe</strong></td>
+                                    <td>${order.car_type || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Harga/Hari</strong></td>
+                                    <td>Rp ${formatCurrency(order.daily_rate)}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-calendar-alt me-2"></i>Detail Rental</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="45%"><strong>Tanggal Mulai</strong></td>
+                                    <td>${formatShortDate(order.tanggal_mulai)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tanggal Selesai</strong></td>
+                                    <td>${formatShortDate(order.tanggal_selesai)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Durasi</strong></td>
+                                    <td>${order.durasi_hari} hari</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lokasi Penjemputan</strong></td>
+                                    <td>${order.lokasi_penjemputan || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Catatan</strong></td>
+                                    <td>${order.catatan || '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle me-2"></i>Informasi Pembayaran</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small><strong>Tanggal Pembayaran:</strong> ${order.payment_date ? formatDate(order.payment_date) : '-'}</small><br>
+                                <small><strong>ID Transaksi Midtrans:</strong> ${order.midtrans_order_id || '-'}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <small><strong>Status Record Pembayaran:</strong> ${order.payment_record_status ? getPaymentBadge(order.payment_record_status) : 'Tidak ada record'}</small><br>
+                                <small><strong>Waktu Transaksi:</strong> ${order.transaction_time || '-'}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-warning btn-sm me-2" 
+                                onclick="openUpdatePaymentModal('${order.kode_pesanan}', '${order.status}', '${order.status_pembayaran}')">
+                            <i class="fas fa-money-bill-wave me-1"></i> Update Status Pembayaran
+                        </button>
+                        <button class="btn btn-primary btn-sm" 
+                                onclick="openUpdateOrderModal('${order.kode_pesanan}', '${order.status}')">
+                            <i class="fas fa-edit me-1"></i> Update Status Pesanan
+                        </button>
+                    </div>
+                `;
+                
+                const modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+                modal.show();
+            } else {
+                content.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.message || 'Gagal memuat data pesanan'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('orderDetailContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Terjadi kesalahan saat memuat data pesanan
+                </div>
+            `;
+            const modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+            modal.show();
+        });
+}
+
+// Auto submit on filter change
+document.getElementById('status').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.getElementById('payment_status').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Search with debounce
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.form.submit();
+    }, 500);
+});
+
+// Set today as max date for date filters
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('start_date').max = today;
+document.getElementById('end_date').max = today;
+
+// Validate date range
+document.getElementById('start_date').addEventListener('change', function() {
+    document.getElementById('end_date').min = this.value;
+});
+
+document.getElementById('end_date').addEventListener('change', function() {
+    document.getElementById('start_date').max = this.value;
+});
+
+// Payment status change handler
+document.getElementById('updatePaymentForm').addEventListener('submit', function(e) {
+    const paymentStatus = document.getElementById('payment_status').value;
+    const orderStatus = document.getElementById('order_status').value;
+    
+    if (!paymentStatus) {
+        e.preventDefault();
+        alert('Pilih status pembayaran!');
+        return false;
+    }
+    
+    return true;
+});
+
+// Notifikasi sukses jika ada parameter success
+if (window.location.search.includes('success=true')) {
+    alert('Status berhasil diperbarui!');
+}
+</script>
+{% endblock %}

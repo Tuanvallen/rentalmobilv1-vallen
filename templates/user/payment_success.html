@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran Berhasil - Rental Mobil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .success-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .success-icon {
+            font-size: 80px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        .next-steps {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            border-left: 5px solid #28a745;
+        }
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    {% extends 'base.html' %}
+    
+    {% block content %}
+    <div class="success-container text-center">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        
+        <h1 class="mb-3">Pembayaran Berhasil!</h1>
+        <p class="lead mb-4">Terima kasih telah melakukan pembayaran. Pesanan Anda telah dikonfirmasi.</p>
+        
+        <!-- Order Info -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-receipt"></i> Detail Pesanan</h5>
+                <div class="row mt-3">
+                    <div class="col-md-6 text-start">
+                        <p><strong>Kode Pesanan:</strong><br>{{ order.kode_pesanan }}</p>
+                        <p><strong>Mobil:</strong><br>{{ order.merk }} {{ order.model }}</p>
+                        <p><strong>Plat Nomor:</strong><br>{{ order.plat_nomor }}</p>
+                    </div>
+                    <div class="col-md-6 text-start">
+                        <p><strong>Tanggal Sewa:</strong><br>{{ order.tanggal_mulai }} - {{ order.tanggal_selesai }}</p>
+                        <p><strong>Total Pembayaran:</strong><br>Rp {{ "{:,.0f}".format(order.total_harga) }}</p>
+                        <p><strong>Status:</strong><br><span class="badge bg-success">LUNAS</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Next Steps -->
+        <div class="next-steps text-start">
+            <h5 class="mb-4"><i class="fas fa-list-check"></i> Langkah Selanjutnya:</h5>
+            
+            <div class="d-flex align-items-center mb-3">
+                <div class="step-icon">
+                    <i class="fas fa-1"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Simpan Invoice</h6>
+                    <p class="mb-0 text-muted">Unduh invoice sebagai bukti pembayaran.</p>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center mb-3">
+                <div class="step-icon">
+                    <i class="fas fa-2"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Hubungi Admin</h6>
+                    <p class="mb-0 text-muted">Konfirmasi pengambilan mobil melalui chat admin.</p>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center">
+                <div class="step-icon">
+                    <i class="fas fa-3"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Ambil Mobil</h6>
+                    <p class="mb-0 text-muted">Datang ke lokasi sesuai waktu yang telah ditentukan.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="mt-5">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{{ url_for('invoice', order_id=order.kode_pesanan) }}" class="btn btn-success w-100">
+                        <i class="fas fa-download"></i> Download Invoice
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('order_detail', order_code=order.kode_pesanan) }}" class="btn btn-primary w-100">
+                        <i class="fas fa-eye"></i> Lihat Detail Pesanan
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('chat') }}?admin_id=1" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-comment"></i> Chat Admin
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{{ url_for('user_orders') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Daftar Pesanan
+                </a>
+            </div>
+        </div>
+        
+        <!-- Confirmation Message -->
+        <div class="alert alert-light mt-4">
+            <p class="mb-0">
+                <i class="fas fa-envelope"></i> Konfirmasi pembayaran juga telah dikirim ke email: 
+                <strong>{{ order.email }}</strong>
+            </p>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

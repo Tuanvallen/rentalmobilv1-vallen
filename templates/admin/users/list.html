@@ -1,0 +1,567 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola User - Admin Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h2 fw-bold mb-2">Kelola User</h1>
+                            <p class="text-muted mb-0">Total {{ total }} user terdaftar</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                <i class="fas fa-user-plus me-2"></i> Tambah User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('admin_users') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Cari User</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search }}" placeholder="Nama, email, NIK...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="all" {% if role == 'all' %}selected{% endif %}>Semua Role</option>
+                                <option value="admin" {% if role == 'admin' %}selected{% endif %}>Admin</option>
+                                <option value="customer" {% if role == 'customer' %}selected{% endif %}>Customer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="all" {% if status == 'all' %}selected{% endif %}>Semua Status</option>
+                                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                <option value="banned" {% if status == 'banned' %}selected{% endif %}>Banned</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i> Cari
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>NIK</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Bergabung</th>
+                                    <th>Login Terakhir</th>
+                                    <th width="120" class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if users %}
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if user.foto_profil %}
+                                                <img src="{{ url_for('serve_upload', filename='profiles/' + user.foto_profil) }}" 
+                                                     class="rounded-circle me-3" width="40" height="40" alt="{{ user.nama }}">
+                                                {% else %}
+                                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user text-white"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-0">{{ user.nama }}</h6>
+                                                    <small class="text-muted">{{ user.no_telepon or '-' }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:{{ user.email }}" class="text-decoration-none">{{ user.email }}</a>
+                                        </td>
+                                        <td>
+                                            <code>{{ user.nik }}</code>
+                                        </td>
+                                        <td>
+                                            {% if user.role == 'admin' %}
+                                            <span class="badge bg-danger">Admin</span>
+                                            {% else %}
+                                            <span class="badge bg-primary">Customer</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.status == 'active' %}
+                                            <span class="badge bg-success">Active</span>
+                                            {% elif user.status == 'inactive' %}
+                                            <span class="badge bg-warning">Inactive</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Banned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ user.created_at.strftime('%d/%m/%Y') }}</small>
+                                        </td>
+                                        <td>
+                                            {% if user.last_login %}
+                                            <small class="text-muted">{{ user.last_login.strftime('%d/%m/%Y') }}</small>
+                                            {% else %}
+                                            <small class="text-muted">-</small>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-info" 
+                                                        onclick="viewUser({{ user.id }})"
+                                                        title="Detail">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <a href="{{ url_for('admin_user_edit', user_id=user.id) }}" 
+                                                   class="btn btn-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% if user.id != session.user_id %}
+                                                <form method="POST" 
+                                                      action="{{ url_for('admin_toggle_user', user_id=user.id) }}"
+                                                      style="display: inline;">
+                                                    <button type="submit" class="btn btn-{{ 'warning' if user.status == 'active' else 'success' }}"
+                                                            title="{{ 'Nonaktifkan' if user.status == 'active' else 'Aktifkan' }}"
+                                                            onclick="return confirm('{{ 'Nonaktifkan' if user.status == 'active' else 'Aktifkan' }} user {{ user.nama }}?')">
+                                                        <i class="fas fa-{{ 'ban' if user.status == 'active' else 'check' }}"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="POST" 
+                                                      action="{{ url_for('admin_delete_user', user_id=user.id) }}"
+                                                      style="display: inline;"
+                                                      onsubmit="return confirm('Hapus user {{ user.nama }}? Tindakan ini tidak dapat dibatalkan!')">
+                                                    <button type="submit" class="btn btn-danger" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                        <h5>Tidak ada user ditemukan</h5>
+                                        <p class="text-muted">Coba ubah filter pencarian Anda</p>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_users', page=page-1, role=role, status=status, search=search) if page > 1 else '#' }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p >= page-2 and p <= page+2 %}
+                        <li class="page-item {% if p == page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin_users', page=p, role=role, status=status, search=search) }}">{{ p }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_users', page=page+1, role=role, status=status, search=search) if page < total_pages else '#' }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- View User Modal -->
+<div class="modal fade" id="viewUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="userDetailContent">
+                <!-- Content will be loaded by JavaScript -->
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Memuat data user...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" id="editUserBtn" style="display: none;">
+                    <i class="fas fa-edit me-2"></i> Edit User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah User Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label for="new_nama" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="new_nama" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_email" class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="new_email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="new_password" required minlength="6">
+                        <div class="form-text">Minimal 6 karakter</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_confirm_password" class="form-label">Konfirmasi Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="new_confirm_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_nik" class="form-label">NIK <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="new_nik" required maxlength="16" pattern="\d{16}">
+                        <div class="form-text">16 digit angka</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_no_telepon" class="form-label">No. Telepon</label>
+                        <input type="tel" class="form-control" id="new_no_telepon">
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_role" class="form-label">Role <span class="text-danger">*</span></label>
+                        <select class="form-select" id="new_role" required>
+                            <option value="customer">Customer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="addUser()" id="addUserBtn">
+                    <i class="fas fa-plus me-2"></i> Tambah User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// View user details
+function viewUser(userId) {
+    // Reset modal content
+    document.getElementById('userDetailContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Memuat data user...</p>
+        </div>
+    `;
+    
+    // Hide edit button
+    document.getElementById('editUserBtn').style.display = 'none';
+    
+    // Fetch user data
+    fetch('{{ url_for("api_admin_user_detail", user_id=0) }}'.replace('0', userId))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const user = data.user;
+                const content = document.getElementById('userDetailContent');
+                
+                content.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            ${user.foto_profil ? 
+                                `<img src="{{ url_for('serve_upload', filename='profiles/') }}${user.foto_profil}" 
+                                      class="rounded-circle mb-3" width="120" height="120" style="object-fit: cover;">` :
+                                `<div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                      style="width: 120px; height: 120px;">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                 </div>`
+                            }
+                            <h5>${user.nama}</h5>
+                            <span class="badge bg-${user.role === 'admin' ? 'danger' : 'primary'}">
+                                ${user.role === 'admin' ? 'Admin' : 'Customer'}
+                            </span>
+                        </div>
+                        <div class="col-md-8">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="30%"><strong>Email</strong></td>
+                                    <td><a href="mailto:${user.email}">${user.email}</a></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NIK</strong></td>
+                                    <td><code>${user.nik}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>No. Telepon</strong></td>
+                                    <td>${user.no_telepon || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Alamat</strong></td>
+                                    <td>${user.alamat || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tanggal Lahir</strong></td>
+                                    <td>${user.tanggal_lahir || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status</strong></td>
+                                    <td>
+                                        <span class="badge bg-${user.status === 'active' ? 'success' : user.status === 'inactive' ? 'warning' : 'danger'}">
+                                            ${user.status === 'active' ? 'Active' : user.status === 'inactive' ? 'Inactive' : 'Banned'}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Bergabung</strong></td>
+                                    <td>${formatDate(user.created_at)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Login Terakhir</strong></td>
+                                    <td>${user.last_login ? formatDate(user.last_login) : 'Belum pernah login'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Terverifikasi</strong></td>
+                                    <td>${user.verified_at ? formatDate(user.verified_at) : 'Belum diverifikasi'}</td>
+                                </tr>
+                            </table>
+                            
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-chart-bar me-2"></i>Statistik:</h6>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small>Total Pesanan: <strong>${user.order_count || 0}</strong></small>
+                                    </div>
+                                    <div class="col-6">
+                                        <small>Total Pengeluaran: <strong>Rp ${formatCurrency(user.total_spent || 0)}</strong></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Show edit button and set onclick
+                const editBtn = document.getElementById('editUserBtn');
+                editBtn.style.display = 'inline-block';
+                editBtn.onclick = function() {
+                    window.location.href = '{{ url_for("admin_user_edit", user_id=0) }}'.replace('0', userId);
+                };
+                
+                const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+                modal.show();
+            } else {
+                content.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.message || 'Gagal memuat data user'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('userDetailContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Terjadi kesalahan saat memuat data user
+                </div>
+            `;
+        });
+}
+
+// Add new user
+function addUser() {
+    const formData = {
+        nama: document.getElementById('new_nama').value.trim(),
+        email: document.getElementById('new_email').value.trim(),
+        password: document.getElementById('new_password').value,
+        confirm_password: document.getElementById('new_confirm_password').value,
+        nik: document.getElementById('new_nik').value,
+        no_telepon: document.getElementById('new_no_telepon').value.trim(),
+        role: document.getElementById('new_role').value
+    };
+    
+    // Validation
+    if (!formData.nama || !formData.email || !formData.password || !formData.confirm_password || !formData.nik) {
+        alert('Harap lengkapi semua field yang wajib diisi!');
+        return;
+    }
+    
+    if (formData.password !== formData.confirm_password) {
+        alert('Password dan konfirmasi password tidak cocok!');
+        return;
+    }
+    
+    if (formData.password.length < 6) {
+        alert('Password minimal 6 karakter!');
+        return;
+    }
+    
+    if (formData.nik.length !== 16 || !/^\d+$/.test(formData.nik)) {
+        alert('NIK harus 16 digit angka!');
+        return;
+    }
+    
+    // Disable button and show loading
+    const addBtn = document.getElementById('addUserBtn');
+    const originalText = addBtn.innerHTML;
+    addBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Menambahkan...';
+    addBtn.disabled = true;
+    
+    // Send request - PERBAIKAN DI SINI
+    // Menggunakan endpoint yang sudah ada di app.py: /api/admin/users/add
+    fetch('/api/admin/users/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('User berhasil ditambahkan!');
+            window.location.reload();
+        } else {
+            alert('Gagal menambahkan user: ' + data.message);
+            addBtn.innerHTML = originalText;
+            addBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menambahkan user');
+        addBtn.innerHTML = originalText;
+        addBtn.disabled = false;
+    });
+}
+
+// Helper functions
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('id-ID').format(amount);
+}
+
+// Auto submit on filter change
+document.getElementById('role').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.getElementById('status').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Search with debounce
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.form.submit();
+    }, 500);
+});
+
+// NIK validation for new user
+document.getElementById('new_nik').addEventListener('input', function(e) {
+    this.value = this.value.replace(/\D/g, '');
+    if (this.value.length > 16) {
+        this.value = this.value.slice(0, 16);
+    }
+});
+
+// Password validation for new user
+document.getElementById('new_confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('new_password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    } else {
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Katalog Mobil - Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <h1 class="h2 fw-bold mb-3">Katalog Mobil</h1>
+                    <p class="text-muted mb-0">Temukan mobil yang sesuai dengan kebutuhan Anda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('catalog') }}" id="filterForm">
+                        <!-- Search -->
+                        <div class="mb-3">
+                            <label for="search" class="form-label">Cari Mobil</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ filters.search if filters.search else '' }}" 
+                                   placeholder="Merk, model, atau plat">
+                        </div>
+
+                        <!-- Car Type -->
+                        <div class="mb-3">
+                            <label for="tipe" class="form-label">Tipe Mobil</label>
+                            <select class="form-select" id="tipe" name="tipe">
+                                <option value="all" {% if not filters.tipe or filters.tipe == 'all' %}selected{% endif %}>Semua Tipe</option>
+                                {% for type in car_types %}
+                                <option value="{{ type.tipe }}" {% if filters.tipe == type.tipe %}selected{% endif %}>
+                                    {{ type.tipe|title }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Transmission -->
+                        <div class="mb-3">
+                            <label for="transmisi" class="form-label">Transmisi</label>
+                            <select class="form-select" id="transmisi" name="transmisi">
+                                <option value="all" {% if not filters.transmisi or filters.transmisi == 'all' %}selected{% endif %}>Semua</option>
+                                <option value="automatic" {% if filters.transmisi == 'automatic' %}selected{% endif %}>Automatic</option>
+                                <option value="manual" {% if filters.transmisi == 'manual' %}selected{% endif %}>Manual</option>
+                            </select>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label">Harga per Hari</label>
+                            <div class="row g-2">
+                                <div class="col">
+                                    <input type="number" class="form-control" id="min_harga" name="min_harga" 
+                                           placeholder="Min" value="{{ filters.min_harga if filters.min_harga else '' }}">
+                                </div>
+                                <div class="col">
+                                    <input type="number" class="form-control" id="max_harga" name="max_harga" 
+                                           placeholder="Max" value="{{ filters.max_harga if filters.max_harga else '' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Capacity -->
+                        <div class="mb-4">
+                            <label for="min_kapasitas" class="form-label">Minimal Kapasitas</label>
+                            <select class="form-select" id="min_kapasitas" name="min_kapasitas">
+                                <option value="">Semua</option>
+                                <option value="2" {% if filters.min_kapasitas == '2' %}selected{% endif %}>2+ Orang</option>
+                                <option value="4" {% if filters.min_kapasitas == '4' %}selected{% endif %}>4+ Orang</option>
+                                <option value="6" {% if filters.min_kapasitas == '6' %}selected{% endif %}>6+ Orang</option>
+                                <option value="8" {% if filters.min_kapasitas == '8' %}selected{% endif %}>8+ Orang</option>
+                            </select>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i> Terapkan Filter
+                            </button>
+                            <a href="{{ url_for('catalog') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo me-2"></i> Reset Filter
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card border-0 shadow mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-chart-bar me-2"></i>Statistik</h6>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Mobil
+                            <span class="badge bg-primary rounded-pill">{{ total }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            Halaman
+                            <span class="badge bg-primary rounded-pill">{{ page }} / {{ total_pages }}</span>
+                        </div>
+                        {% if filters %}
+                        <div class="list-group-item">
+                            <small class="text-muted">Filter aktif:</small>
+                            <div class="mt-1">
+                                {% for key, value in filters.items() %}
+                                    {% if value and key != 'page' %}
+                                    <span class="badge bg-info me-1 mb-1">{{ key }}: {{ value }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cars Listing -->
+        <div class="col-md-9">
+            <!-- Sorting & Info -->
+            <div class="card border-0 shadow mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Menampilkan {{ cars|length }} dari {{ total }} mobil</h5>
+                            {% if cars|length == 0 %}
+                            <p class="text-muted mb-0">Coba ubah filter untuk menemukan mobil yang sesuai</p>
+                            {% endif %}
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-sort me-2"></i>Urutkan
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="sortBy('price_asc')">Harga: Rendah ke Tinggi</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="sortBy('price_desc')">Harga: Tinggi ke Rendah</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="sortBy('newest')">Terbaru</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="sortBy('popular')">Paling Banyak Disewa</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cars Grid -->
+            {% if cars %}
+            <div class="row">
+                {% for car in cars %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow">
+                        <!-- Car Image -->
+                        <div class="position-relative">
+                            {% if car.gambar %}
+                            <img src="{{ url_for('serve_upload', filename='cars/' + car.gambar) }}" 
+                                 class="card-img-top" alt="{{ car.merk }} {{ car.model }}" 
+                                 style="height: 200px; object-fit: cover;">
+                            {% else %}
+                            <img src="https://via.placeholder.com/300x200?text=No+Image" 
+                                 class="card-img-top" alt="No Image" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                            
+                            <!-- Status Badge -->
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-{{ 'success' if car.status == 'tersedia' else 'danger' if car.status == 'disewa' else 'warning' }}">
+                                    {{ car.status|title }}
+                                </span>
+                            </div>
+                            
+                            <!-- Car Type Badge -->
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-primary">{{ car.tipe|title }}</span>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Car Info -->
+                            <h5 class="card-title">{{ car.merk }} {{ car.model }}</h5>
+                            <p class="card-text text-muted">
+                                <i class="fas fa-calendar text-primary me-1"></i> {{ car.tahun }} | 
+                                <i class="fas fa-users text-primary me-1"></i> {{ car.kapasitas }} Orang | 
+                                <i class="fas fa-cog text-primary me-1"></i> {{ car.transmisi|title }}
+                            </p>
+                            
+                            <!-- Features -->
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-car me-1"></i> {{ car.plat_nomor }}
+                                </small>
+                            </div>
+
+                            <!-- Price & Action -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="text-primary fw-bold mb-0">Rp {{ "{:,.0f}".format(car.harga_per_hari) }}</h4>
+                                    <small class="text-muted">/hari</small>
+                                </div>
+                                <div>
+                                    <a href="{{ url_for('car_detail', car_id=car.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-info-circle me-1"></i> Detail
+                                    </a>
+                                    {% if car.status == 'tersedia' and session.user_id %}
+                                    <a href="{{ url_for('booking', car_id=car.id) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-calendar-check me-1"></i> Sewa
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <!-- Previous Page -->
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('catalog', page=page-1, **filters) if page > 1 else '#' }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Page Numbers -->
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p >= page-2 and p <= page+2 %}
+                        <li class="page-item {% if p == page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('catalog', page=p, **filters) }}">{{ p }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Next Page -->
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('catalog', page=page+1, **filters) if page < total_pages else '#' }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <!-- No Results -->
+            <div class="card border-0 shadow">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-car fa-4x text-muted mb-3"></i>
+                    <h4>Tidak ada mobil yang ditemukan</h4>
+                    <p class="text-muted mb-4">Coba ubah filter pencarian Anda</p>
+                    <a href="{{ url_for('catalog') }}" class="btn btn-primary">
+                        <i class="fas fa-redo me-2"></i> Reset Filter
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto submit form on filter change
+document.querySelectorAll('#filterForm select').forEach(select => {
+    select.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+});
+
+// Sort function
+function sortBy(sortType) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', sortType);
+    window.location.href = url.toString();
+}
+
+// Price range validation
+document.getElementById('min_harga').addEventListener('input', function() {
+    const maxHarga = document.getElementById('max_harga');
+    if (maxHarga.value && parseInt(this.value) > parseInt(maxHarga.value)) {
+        this.value = maxHarga.value;
+    }
+});
+
+document.getElementById('max_harga').addEventListener('input', function() {
+    const minHarga = document.getElementById('min_harga');
+    if (minHarga.value && parseInt(this.value) < parseInt(minHarga.value)) {
+        this.value = minHarga.value;
+    }
+});
+
+// Quick search
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        document.getElementById('filterForm').submit();
+    }, 500);
+});
+</script>
+{% endblock %}

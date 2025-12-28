@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ order.kode_pesanan }} - Rental Mobil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .invoice-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            background: white;
+        }
+        .invoice-header {
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .invoice-title {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .invoice-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .total-section {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #28a745;
+        }
+        .footer-note {
+            border-top: 1px dashed #dee2e6;
+            padding-top: 20px;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .invoice-container {
+                border: none;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Invoice Header -->
+        <div class="invoice-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <h1 class="invoice-title">INVOICE</h1>
+                    <p class="mb-0"><strong>Rental Mobil XYZ</strong></p>
+                    <p class="mb-0">Jl. Contoh No. 123, Jakarta</p>
+                    <p class="mb-0">Telp: 021-12345678</p>
+                    <p class="mb-0">Email: info@rentalmobilxyz.com</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h3 class="text-success">#{{ order.kode_pesanan }}</h3>
+                    <p class="mb-0"><strong>Tanggal Invoice:</strong> {{ tanggal_sekarang }}</p>
+                    <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success">LUNAS</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer Info -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5><i class="fas fa-user"></i> Data Pelanggan</h5>
+                <table class="table table-borderless">
+                    <tr>
+                        <td width="40%">Nama</td>
+                        <td>: {{ order.nama }}</td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td>: {{ order.email }}</td>
+                    </tr>
+                    <tr>
+                        <td>No. Telepon</td>
+                        <td>: {{ order.no_telepon or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Alamat</td>
+                        <td>: {{ order.alamat or '-' }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5><i class="fas fa-car"></i> Detail Sewa</h5>
+                <table class="table table-borderless">
+                    <tr>
+                        <td width="40%">Tanggal Pesan</td>
+                        <td>: {{ order.tanggal_pemesanan.strftime('%d-%m-%Y %H:%M') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Periode Sewa</td>
+                        <td>: {{ order.tanggal_mulai }} - {{ order.tanggal_selesai }}</td>
+                    </tr>
+                    <tr>
+                        <td>Durasi</td>
+                        <td>: {{ order.durasi_hari }} hari</td>
+                    </tr>
+                    <tr>
+                        <td>Lokasi Penjemputan</td>
+                        <td>: {{ order.lokasi_penjemputan or '-' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Car Details -->
+        <div class="invoice-details mb-4">
+            <h5><i class="fas fa-car"></i> Detail Mobil</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    {% if order.gambar %}
+                    <img src="{{ url_for('static', filename='uploads/cars/' + order.gambar, _external=True) }}" 
+                         alt="{{ order.merk }}" 
+                         style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 5px;">
+                    {% else %}
+                    <div style="width: 100%; height: 150px; background: #e9ecef; display: flex; align-items: center; justify-content: center; border-radius: 5px;">
+                        <i class="fas fa-car fa-2x text-muted"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-9">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td width="30%">Merk/Model</td>
+                            <td>: {{ order.merk }} {{ order.model }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tahun</td>
+                            <td>: {{ order.tahun }}</td>
+                        </tr>
+                        <tr>
+                            <td>Plat Nomor</td>
+                            <td>: {{ order.plat_nomor }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tipe</td>
+                            <td>: {{ order.tipe|title }}</td>
+                        </tr>
+                        <tr>
+                            <td>Transmisi</td>
+                            <td>: {{ order.transmisi|title }}</td>
+                        </tr>
+                        <tr>
+                            <td>Kapasitas</td>
+                            <td>: {{ order.kapasitas }} orang</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment Details -->
+        <div class="invoice-details mb-4">
+            <h5><i class="fas fa-credit-card"></i> Detail Pembayaran</h5>
+            <table class="table table-borderless">
+                <tr>
+                    <td width="30%">Metode Pembayaran</td>
+                    <td>: {{ order.metode_pembayaran|title }} (Midtrans)</td>
+                </tr>
+                {% if order.tanggal_pembayaran %}
+                <tr>
+                    <td>Tanggal Pembayaran</td>
+                    <td>: {{ order.tanggal_pembayaran.strftime('%d-%m-%Y %H:%M') }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td>Status Pembayaran</td>
+                    <td>: <span class="badge bg-success">LUNAS</span></td>
+                </tr>
+                <tr>
+                    <td>Kode Transaksi</td>
+                    <td>: {{ order.kode_pesanan }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Price Breakdown -->
+        <h5><i class="fas fa-calculator"></i> Rincian Biaya</h5>
+        <table class="table table-bordered mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th width="60%">Deskripsi</th>
+                    <th class="text-end">Hari</th>
+                    <th class="text-end">Harga per Hari</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Sewa {{ order.merk }} {{ order.model }} ({{ order.plat_nomor }})</td>
+                    <td class="text-end">{{ order.durasi_hari }}</td>
+                    <td class="text-end">Rp {{ "{:,.0f}".format(order.harga_per_hari) }}</td>
+                    <td class="text-end">Rp {{ "{:,.0f}".format(order.total_harga) }}</td>
+                </tr>
+                <tr>
+                    <td colspan="3" class="text-end"><strong>Total</strong></td>
+                    <td class="text-end"><strong>Rp {{ "{:,.0f}".format(order.total_harga) }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Total Section -->
+        <div class="total-section">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5 class="mb-0">Terbilang:</h5>
+                    <p class="mb-0"><em>{{ terbilang(order.total_harga) }} rupiah</em></p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <h3 class="text-success mb-0">Rp {{ "{:,.0f}".format(order.total_harga) }}</h3>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer Note -->
+        <div class="footer-note">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Catatan:</h6>
+                    <ul class="mb-0">
+                        <li>Invoice ini sah sebagai bukti pembayaran</li>
+                        <li>Harap tunjukkan invoice saat pengambilan mobil</li>
+                        <li>Simpan invoice untuk keperluan administrasi</li>
+                    </ul>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-1">Dicetak pada: {{ tanggal_cetak }}</p>
+                    <p class="mb-0">Hormat kami,</p>
+                    <p class="mb-0"><strong>Rental Mobil XYZ</strong></p>
+                    <br><br><br>
+                    <p class="mb-0">_______________________</p>
+                    <p class="mb-0">Manager</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Print Button -->
+        <div class="mt-4 text-center no-print">
+            <button onclick="window.print()" class="btn btn-success">
+                <i class="fas fa-print"></i> Cetak Invoice
+            </button>
+            <a href="{{ url_for('payment_history') }}" class="btn btn-outline-secondary ms-2">
+                <i class="fas fa-arrow-left"></i> Kembali ke Riwayat
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        // Auto print jika di parameter URL ada print=true
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === 'true') {
+            window.print();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - Admin Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_users') }}">Kelola User</a></li>
+            <li class="breadcrumb-item active">Edit User</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit User</h5>
+                        <span class="badge bg-light text-dark">{{ user.email }}</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('admin_user_edit', user_id=user.id) }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nama" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nama" name="nama" 
+                                           value="{{ user.nama }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ user.email }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="nik" class="form-label">NIK <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nik" name="nik" 
+                                           value="{{ user.nik }}" required maxlength="16" minlength="16">
+                                    <div class="form-text">16 digit angka</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="no_telepon" class="form-label">No. Telepon</label>
+                                    <input type="tel" class="form-control" id="no_telepon" name="no_telepon" 
+                                           value="{{ user.no_telepon or '' }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="alamat" class="form-label">Alamat</label>
+                                    <textarea class="form-control" id="alamat" name="alamat" rows="3">{{ user.alamat or '' }}</textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="tanggal_lahir" class="form-label">Tanggal Lahir</label>
+                                    <input type="date" class="form-control" id="tanggal_lahir" name="tanggal_lahir" 
+                                           value="{{ user.tanggal_lahir or '' }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="customer" {% if user.role == 'customer' %}selected{% endif %}>Customer</option>
+                                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="active" {% if user.status == 'active' %}selected{% endif %}>Active</option>
+                                        <option value="inactive" {% if user.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                        <option value="banned" {% if user.status == 'banned' %}selected{% endif %}>Banned</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Info Summary -->
+                        <div class="alert alert-info">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Bergabung:</strong> {{ user.created_at.strftime('%d %B %Y %H:%M') }}</p>
+                                    {% if user.last_login %}
+                                    <p class="mb-0"><strong>Login Terakhir:</strong> {{ user.last_login.strftime('%d %B %Y %H:%M') }}</p>
+                                    {% else %}
+                                    <p class="mb-0"><strong>Login Terakhir:</strong> Belum pernah login</p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>ID User:</strong> {{ user.id }}</p>
+                                    {% if user.verified_at %}
+                                    <p class="mb-0"><strong>Terverifikasi:</strong> {{ user.verified_at.strftime('%d %B %Y %H:%M') }}</p>
+                                    {% else %}
+                                    <p class="mb-0"><strong>Terverifikasi:</strong> Belum diverifikasi</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i> Kembali
+                                </a>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i> Simpan Perubahan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card border-0 shadow mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Zona Bahaya</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-danger">Hapus User</h6>
+                    <p class="text-muted">Tindakan ini akan menghapus user secara permanen dari sistem. Semua data terkait user akan dihapus.</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">User ID: {{ user.id }} | Email: {{ user.email }}</small>
+                        </div>
+                        <div>
+                            {% if user.id != session.user_id %}
+                            <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}"
+                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus user {{ user.nama }}? Tindakan ini tidak dapat dibatalkan!')">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i> Hapus User
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="btn btn-danger" disabled>
+                                <i class="fas fa-ban me-2"></i> Tidak Dapat Menghapus Akun Sendiri
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set max date for tanggal lahir to today
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('tanggal_lahir').max = today;
+
+// NIK validation
+document.getElementById('nik').addEventListener('input', function(e) {
+    this.value = this.value.replace(/\D/g, '');
+    if (this.value.length > 16) {
+        this.value = this.value.slice(0, 16);
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const nik = document.getElementById('nik').value;
+    const nama = document.getElementById('nama').value;
+    const email = document.getElementById('email').value;
+    
+    if (nik.length !== 16) {
+        e.preventDefault();
+        alert('NIK harus 16 digit angka');
+        return false;
+    }
+    
+    if (!nama.trim()) {
+        e.preventDefault();
+        alert('Nama tidak boleh kosong');
+        return false;
+    }
+    
+    // Simple email validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        e.preventDefault();
+        alert('Format email tidak valid');
+        return false;
+    }
+    
+    return true;
+});
+</script>
+{% endblock %}

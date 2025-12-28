@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            {% if user.foto_profil %}
+                            <img src="{{ url_for('serve_upload', filename='profiles/' + user.foto_profil) }}" 
+                                 class="rounded-circle" width="80" height="80" alt="Profile Picture">
+                            {% else %}
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" 
+                                 style="width: 80px; height: 80px;">
+                                <i class="fas fa-user fa-2x text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-4">
+                            <h1 class="h3 fw-bold mb-1">Selamat datang, {{ user.nama }}!</h1>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-envelope me-2"></i>{{ user.email }} | 
+                                <i class="fas fa-phone me-2"></i>{{ user.no_telepon }}
+                            </p>
+                            <div class="mt-2">
+                                <a href="{{ url_for('user_profile') }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit me-1"></i> Edit Profil
+                                </a>
+                                <a href="{{ url_for('catalog') }}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-car me-1"></i> Sewa Mobil
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow stat-card primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-car fa-3x mb-3"></i>
+                    <h2 class="stat-number">{{ stats.active_orders if stats else 0 }}</h2>
+                    <p class="mb-0">Sewa Aktif</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow stat-card success">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-3x mb-3"></i>
+                    <h2 class="stat-number">{{ stats.paid_orders if stats else 0 }}</h2>
+                    <p class="mb-0">Sewa Selesai</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow stat-card warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-history fa-3x mb-3"></i>
+                    <h2 class="stat-number">{{ recent_orders|length if recent_orders else 0 }}</h2>
+                    <p class="mb-0">Total Sewa</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow stat-card info">
+                <div class="card-body text-center">
+                    <i class="fas fa-wallet fa-3x mb-3"></i>
+                    <h2 class="stat-number">Rp {{ "{:,.0f}".format(stats.total_spent) if stats and stats.total_spent else 0 }}</h2>
+                    <p class="mb-0">Total Pengeluaran</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Pesanan Terbaru</h5>
+                    <a href="{{ url_for('user_orders') }}" class="btn btn-sm btn-light">Lihat Semua</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Kode Pesanan</th>
+                                    <th>Mobil</th>
+                                    <th>Tanggal</th>
+                                    <th>Durasi</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td><strong>{{ order.kode_pesanan }}</strong></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if order.gambar %}
+                                            <img src="{{ url_for('serve_upload', filename='cars/' + order.gambar) }}" 
+                                                 class="rounded me-2" width="40" height="40" alt="{{ order.merk }}">
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ order.merk }} {{ order.model }}</div>
+                                                <small class="text-muted">{{ order.tanggal_mulai }} - {{ order.tanggal_selesai }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ order.tanggal_pemesanan.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ order.durasi_hari }} hari</td>
+                                    <td class="fw-bold">Rp {{ "{:,.0f}".format(order.total_harga) }}</td>
+                                    <td>
+                                        {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif order.status == 'diproses' %}
+                                        <span class="badge bg-info">Diproses</span>
+                                        {% elif order.status == 'dikonfirmasi' %}
+                                        <span class="badge bg-success">Dikonfirmasi</span>
+                                        {% elif order.status == 'selesai' %}
+                                        <span class="badge bg-secondary">Selesai</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Dibatalkan</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('order_detail', order_code=order.kode_pesanan) }}" 
+                                           class="btn btn-sm btn-primary" title="Detail">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if order.status_pembayaran != 'paid' and order.status == 'pending' %}
+                                        <a href="{{ url_for('payment', order_id=order.kode_pesanan) }}" 
+                                           class="btn btn-sm btn-warning" title="Bayar">
+                                            <i class="fas fa-credit-card"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-4x text-muted mb-3"></i>
+                        <h5>Belum ada pesanan</h5>
+                        <p class="text-muted">Mulai sewa mobil pertama Anda sekarang!</p>
+                        <a href="{{ url_for('catalog') }}" class="btn btn-primary">
+                            <i class="fas fa-car me-2"></i> Sewa Mobil
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-car fa-3x text-primary mb-3"></i>
+                    <h5>Sewa Mobil Baru</h5>
+                    <p class="text-muted">Temukan mobil yang sesuai dengan kebutuhan Anda</p>
+                    <a href="{{ url_for('catalog') }}" class="btn btn-primary">Lihat Katalog</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-headset fa-3x text-primary mb-3"></i>
+                    <h5>Butuh Bantuan?</h5>
+                    <p class="text-muted">Hubungi customer service kami untuk bantuan</p>
+                    <a href="{{ url_for('chat') }}" class="btn btn-primary">Chat Sekarang</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-invoice-dollar fa-3x text-primary mb-3"></i>
+                    <h5>Lihat Riwayat</h5>
+                    <p class="text-muted">Cek semua pesanan yang pernah Anda lakukan</p>
+                    <a href="{{ url_for('user_orders') }}" class="btn btn-primary">Lihat Pesanan</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stat-card {
+    border-radius: 10px;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-card.primary {
+    background: linear-gradient(45deg, #8156FF, #9d7bff);
+}
+
+.stat-card.success {
+    background: linear-gradient(45deg, #28a745, #5cd85c);
+}
+
+.stat-card.warning {
+    background: linear-gradient(45deg, #f59e0b, #ffc94d);
+}
+
+.stat-card.info {
+    background: linear-gradient(45deg, #17a2b8, #5bc0de);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}

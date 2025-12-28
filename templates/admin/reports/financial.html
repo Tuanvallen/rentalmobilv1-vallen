@@ -1,0 +1,547 @@
+{% extends "base.html" %}
+
+{% block title %}Laporan Keuangan - Admin Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h2 fw-bold mb-2">Laporan Keuangan</h1>
+                            <p class="text-muted mb-0">Analisis pendapatan dan transaksi rental mobil</p>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-download me-2"></i> Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="exportReport('pdf')">PDF</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportReport('excel')">Excel</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportReport('csv')">CSV</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('admin_reports') }}" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="period" class="form-label">Periode</label>
+                            <select class="form-select" id="period" name="period">
+                                <option value="daily" {% if period == 'daily' %}selected{% endif %}>Hari Ini</option>
+                                <option value="weekly" {% if period == 'weekly' %}selected{% endif %}>7 Hari Terakhir</option>
+                                <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>30 Hari Terakhir</option>
+                                <option value="yearly" {% if period == 'yearly' %}selected{% endif %}>1 Tahun Terakhir</option>
+                                <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="customStartDate" style="{{ 'display: none;' if period != 'custom' }}">
+                            <label for="start_date" class="form-label">Dari Tanggal</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ start_date }}">
+                        </div>
+                        <div class="col-md-3" id="customEndDate" style="{{ 'display: none;' if period != 'custom' }}">
+                            <label for="end_date" class="form-label">Sampai Tanggal</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ end_date }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-chart-line me-2"></i> Tampilkan Laporan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow summary-card total-revenue">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-uppercase mb-0">Total Pendapatan</h6>
+                            <h2 class="fw-bold mt-2">Rp {{ "{:,.0f}".format(summary.total_revenue if summary else 0) }}</h2>
+                        </div>
+                        <div class="icon-shape">
+                            <i class="fas fa-money-bill-wave fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">{{ period|title }} Period</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow summary-card total-transactions">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-uppercase mb-0">Total Transaksi</h6>
+                            <h2 class="fw-bold mt-2">{{ summary.total_transactions if summary else 0 }}</h2>
+                        </div>
+                        <div class="icon-shape">
+                            <i class="fas fa-receipt fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">{{ period|title }} Period</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow summary-card avg-revenue">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-uppercase mb-0">Rata-rata Transaksi</h6>
+                            <h2 class="fw-bold mt-2">Rp {{ "{:,.0f}".format(summary.average_revenue if summary and summary.total_transactions > 0 else 0) }}</h2>
+                        </div>
+                        <div class="icon-shape">
+                            <i class="fas fa-chart-bar fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">Per Transaksi</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow summary-card max-revenue">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-uppercase mb-0">Transaksi Tertinggi</h6>
+                            <h2 class="fw-bold mt-2">Rp {{ "{:,.0f}".format(summary.max_revenue if summary else 0) }}</h2>
+                        </div>
+                        <div class="icon-shape">
+                            <i class="fas fa-crown fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">Single Transaction</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Tables -->
+    <div class="row mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-xl-8 mb-4">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Trend Pendapatan</h5>
+                </div>
+                <div class="card-body">
+                    {% if revenue_data %}
+                    <div style="height: 300px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h5>Tidak ada data pendapatan</h5>
+                        <p class="text-muted">Tidak ada transaksi pada periode yang dipilih</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Cars -->
+        <div class="col-xl-4 mb-4">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-car me-2"></i>Mobil Terpopuler</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_cars %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Mobil</th>
+                                    <th class="text-end">Pendapatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for car in top_cars %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ car.merk }} {{ car.model }}</strong><br>
+                                            <small class="text-muted">{{ car.rental_count }}x disewa</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-primary">Rp {{ "{:,.0f}".format(car.total_revenue) }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                        <h5>Tidak ada data mobil</h5>
+                        <p class="text-muted">Tidak ada transaksi pada periode yang dipilih</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Revenue Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>Detail Pendapatan Harian</h5>
+                </div>
+                <div class="card-body">
+                    {% if revenue_data %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="revenueTable">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th class="text-end">Jumlah Transaksi</th>
+                                    <th class="text-end">Total Pendapatan</th>
+                                    <th class="text-end">Rata-rata per Transaksi</th>
+                                    <th class="text-end">Detail</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in revenue_data %}
+                                <tr>
+                                    <td>{{ data.date }}</td>
+                                    <td class="text-end">{{ data.transaction_count }}</td>
+                                    <td class="text-end text-primary fw-bold">Rp {{ "{:,.0f}".format(data.total_revenue) }}</td>
+                                    <td class="text-end">Rp {{ "{:,.0f}".format(data.average_revenue) }}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="viewDayDetail('{{ data.date }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <!-- Total Row -->
+                                <tr class="table-active fw-bold">
+                                    <td>TOTAL</td>
+                                    <td class="text-end">{{ summary.total_transactions if summary else 0 }}</td>
+                                    <td class="text-end text-primary">Rp {{ "{:,.0f}".format(summary.total_revenue if summary else 0) }}</td>
+                                    <td class="text-end">Rp {{ "{:,.0f}".format(summary.average_revenue if summary and summary.total_transactions > 0 else 0) }}</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-table fa-3x text-muted mb-3"></i>
+                        <h5>Tidak ada data</h5>
+                        <p class="text-muted">Tidak ada transaksi pada periode yang dipilih</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="modal fade" id="dayDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Transaksi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="dayDetailContent">
+                <!-- Content will be loaded by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.summary-card {
+    border-radius: 15px;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+}
+
+.summary-card.total-revenue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.summary-card.total-transactions {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.summary-card.avg-revenue {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.summary-card.max-revenue {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.icon-shape {
+    opacity: 0.8;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Toggle custom date inputs
+document.getElementById('period').addEventListener('change', function() {
+    const isCustom = this.value === 'custom';
+    document.getElementById('customStartDate').style.display = isCustom ? 'block' : 'none';
+    document.getElementById('customEndDate').style.display = isCustom ? 'block' : 'none';
+});
+
+// Export report
+function exportReport(format) {
+    const period = "{{ period }}";
+    const startDate = "{{ start_date }}";
+    const endDate = "{{ end_date }}";
+    
+    let url = `/api/reports/export/${format}?period=${period}`;
+    if (startDate && endDate) {
+        url += `&start_date=${startDate}&end_date=${endDate}`;
+    }
+    
+    window.open(url, '_blank');
+}
+
+// View day detail
+function viewDayDetail(date) {
+    fetch(`/api/reports/day-detail/${date}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const content = document.getElementById('dayDetailContent');
+                let html = `
+                    <h5>Transaksi Tanggal ${date}</h5>
+                    <p class="text-muted">Total: ${data.total_transactions} transaksi | Rp ${data.total_revenue.toLocaleString('id-ID')}</p>
+                `;
+                
+                if (data.orders && data.orders.length > 0) {
+                    html += `
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Pelanggan</th>
+                                        <th>Mobil</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    data.orders.forEach(order => {
+                        html += `
+                            <tr>
+                                <td><code>${order.kode_pesanan}</code></td>
+                                <td>${order.customer_name}</td>
+                                <td>${order.merk} ${order.model}</td>
+                                <td class="text-end text-primary">Rp ${order.total_harga.toLocaleString('id-ID')}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="text-center py-4">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Tidak ada transaksi pada tanggal ini</p>
+                        </div>
+                    `;
+                }
+                
+                content.innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('dayDetailModal'));
+                modal.show();
+            } else {
+                alert('Gagal memuat detail transaksi');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat memuat detail transaksi');
+        });
+}
+
+// Initialize revenue chart
+{% if revenue_data %}
+const ctx = document.getElementById('revenueChart').getContext('2d');
+
+// Prepare data for chart
+const dates = [
+    {% for data in revenue_data %}
+    '{{ data.date.split("-")[2] }}/{{ data.date.split("-")[1] }}',
+    {% endfor %}
+];
+
+const revenues = [
+    {% for data in revenue_data %}
+    {{ data.total_revenue }},
+    {% endfor %}
+];
+
+const transactionCounts = [
+    {% for data in revenue_data %}
+    {{ data.transaction_count }},
+    {% endfor %}
+];
+
+const revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: dates,
+        datasets: [
+            {
+                label: 'Pendapatan (Rp)',
+                data: revenues,
+                borderColor: '#8156FF',
+                backgroundColor: 'rgba(129, 86, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Jumlah Transaksi',
+                data: transactionCounts,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                yAxisID: 'y1'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Pendapatan (Rp)'
+                },
+                ticks: {
+                    callback: function(value) {
+                        return 'Rp ' + value.toLocaleString('id-ID');
+                    }
+                }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'Jumlah Transaksi'
+                },
+                grid: {
+                    drawOnChartArea: false,
+                },
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label === 'Pendapatan (Rp)') {
+                            return label + ': Rp ' + context.parsed.y.toLocaleString('id-ID');
+                        } else {
+                            return label + ': ' + context.parsed.y;
+                        }
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+// Set date range max to today
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('start_date')?.max = today;
+document.getElementById('end_date')?.max = today;
+
+// Validate date range
+document.getElementById('start_date')?.addEventListener('change', function() {
+    document.getElementById('end_date').min = this.value;
+});
+
+document.getElementById('end_date')?.addEventListener('change', function() {
+    document.getElementById('start_date').max = this.value;
+});
+</script>
+{% endblock %}

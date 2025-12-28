@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Mobil - Admin Rental Mobil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h2 fw-bold mb-2">Kelola Mobil</h1>
+                            <p class="text-muted mb-0">Total {{ total }} mobil terdaftar</p>
+                        </div>
+                        <a href="{{ url_for('admin_car_add') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Tambah Mobil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('admin_cars') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Cari Mobil</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search }}" placeholder="Merk, model, plat...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="all" {% if status == 'all' %}selected{% endif %}>Semua Status</option>
+                                <option value="tersedia" {% if status == 'tersedia' %}selected{% endif %}>Tersedia</option>
+                                <option value="disewa" {% if status == 'disewa' %}selected{% endif %}>Disewa</option>
+                                <option value="maintenance" {% if status == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i> Cari
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <a href="{{ url_for('admin_cars') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-redo me-2"></i> Reset
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cars List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th width="80">Gambar</th>
+                                    <th>Mobil</th>
+                                    <th>Plat</th>
+                                    <th>Tipe</th>
+                                    <th>Harga/Hari</th>
+                                    <th>Status</th>
+                                    <th>Dibuat</th>
+                                    <th width="150" class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if cars %}
+                                    {% for car in cars %}
+                                    <tr>
+                                        <td>
+                                            {% if car.gambar %}
+                                            <img src="{{ url_for('serve_upload', filename='cars/' + car.gambar) }}" 
+                                                 class="rounded" width="60" height="40" 
+                                                 style="object-fit: cover;" alt="{{ car.merk }}">
+                                            {% else %}
+                                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
+                                                 style="width: 60px; height: 40px;">
+                                                <i class="fas fa-car text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-0">{{ car.merk }} {{ car.model }}</h6>
+                                                <small class="text-muted">
+                                                    {{ car.tahun }} | {{ car.kapasitas }} Orang | {{ car.transmisi|title }}
+                                                </small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <code>{{ car.plat_nomor }}</code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ car.tipe|title }}</span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-primary">Rp {{ "{:,.0f}".format(car.harga_per_hari) }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if car.status == 'tersedia' %}
+                                            <span class="badge bg-success">Tersedia</span>
+                                            {% elif car.status == 'disewa' %}
+                                            <span class="badge bg-warning">Disewa</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Maintenance</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ car.created_at.strftime('%d/%m/%Y') }}</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('admin_car_edit', car_id=car.id) }}" 
+                                                   class="btn btn-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-danger" 
+                                                        onclick="confirmDelete({{ car.id }})" title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                                        <h5>Tidak ada mobil ditemukan</h5>
+                                        <p class="text-muted">Coba ubah filter pencarian Anda</p>
+                                        <a href="{{ url_for('admin_car_add') }}" class="btn btn-primary">
+                                            <i class="fas fa-plus me-2"></i> Tambah Mobil Pertama
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_cars', page=page-1, status=status, search=search) if page > 1 else '#' }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p >= page-2 and p <= page+2 %}
+                        <li class="page-item {% if p == page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin_cars', page=p, status=status, search=search) }}">{{ p }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_cars', page=page+1, status=status, search=search) if page < total_pages else '#' }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menghapus mobil ini?</p>
+                <p class="text-danger"><strong>Peringatan:</strong> Action ini tidak dapat dibatalkan!</p>
+                <p class="text-muted"><small>Mobil yang sedang disewa tidak dapat dihapus.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <form method="POST" action="{{ url_for('admin_delete_car', car_id=0) }}" id="deleteForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(carId) {
+    // Set form action
+    document.getElementById('deleteForm').action = "{{ url_for('admin_delete_car', car_id=0) }}".replace('0', carId);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Auto submit on filter change
+document.getElementById('status').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Search with debounce
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.form.submit();
+    }, 500);
+});
+</script>
+{% endblock %}
